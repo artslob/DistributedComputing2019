@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "main.h"
+#include "ipc.h"
 
 
 int parse_cli_args(int argc, char* argv[]);
@@ -16,7 +17,7 @@ int main(int argc, char* argv[])
     int N = parse_cli_args(argc, argv);
     printf("N is %d\n", N);
 
-    for (int child_id = 1; child_id < N; child_id++) {
+    for (local_id child_id = 1; child_id < N; child_id++) {
         pid_t pid = fork();
         if (pid < 0) {
             printf("error on fork() call!");
