@@ -1,5 +1,5 @@
 compiler=clang
-flags=-std=c99 -Wall -pedantic
+flags=-std=c99 -Wall -pedantic -Werror
 executable=main
 
 all:
