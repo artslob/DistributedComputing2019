@@ -10,3 +10,4 @@ run: all
 
 clean:
 	rm $(executable)
+	rm *.log
