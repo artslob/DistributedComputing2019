@@ -4,14 +4,18 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "main.h"
 #include "ipc.h"
+#include "common.h"
+#include "log.h"
 
 
 int parse_cli_args(int argc, char* argv[]);
 
-pipe_t** create_pipes(int N) {
+pipe_t** create_pipes(int N, int pipes_log_fd) {
     int rows_count = N, columns_count = N;
     int length = sizeof(pipe_t*) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
     pipe_t** array = (pipe_t**) malloc(length);
@@ -35,6 +39,7 @@ pipe_t** create_pipes(int N) {
             array[i][j].read_fd = pipefd[0];
             array[i][j].write_fd = pipefd[1];
             printf("%d %d: %2d %2d\n", i, j, array[i][j].read_fd, array[i][j].write_fd);
+            log_pipe_created(pipes_log_fd, i, j, pipefd[0], pipefd[1]);
 
             if (pipe(pipefd) != 0) {
                 printf("error occured while creating pipe.\n");
@@ -43,6 +48,7 @@ pipe_t** create_pipes(int N) {
             array[j][i].read_fd = pipefd[0];
             array[j][i].write_fd = pipefd[1];
             printf("%d %d: %2d %2d\n", j, i, array[j][i].read_fd, array[j][i].write_fd);
+            log_pipe_created(pipes_log_fd, j, i, pipefd[0], pipefd[1]);
         }
     }
 
@@ -55,8 +61,11 @@ int main(int argc, char* argv[])
     int N = parse_cli_args(argc, argv);
     printf("N is %d\n", N);
 
-    pipe_t** pipes = create_pipes(N);
+    int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+
+    pipe_t** pipes = create_pipes(N, pipes_log_fd);
     pipes = NULL;
+    close(pipes_log_fd);
 
     for (local_id child_id = 1; child_id < N; child_id++) {
         pid_t pid = fork();
