@@ -7,6 +7,10 @@
 #include "ipc.h"
 
 
+pipe_t get_pipe(pipe_t** pipes, local_id from, local_id to) {
+    return pipes[from][to];
+}
+
 void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
     int rows_count = N, columns_count = N;
 
