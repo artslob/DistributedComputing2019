@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     printf("N is %d\n", N);
 
     int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+    int events_log_fd = open(events_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 
     pipe_t** pipes = create_pipes(N, pipes_log_fd);
     close(pipes_log_fd);
@@ -33,6 +34,8 @@ int main(int argc, char* argv[])
         }
         if (pid == 0) {
             printf("I am child with id %d\n", child_id);
+            ProcessContext context = {.id = child_id, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
+            child_work(context);
             exit(0);
         } else {
             printf("I am parent\n");
@@ -53,7 +56,12 @@ int main(int argc, char* argv[])
 }
 
 void child_work(ProcessContext context) {
-
+    close_unused_pipes(context.pipes, context.N, context.id);
+    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED};
+    Message msg = {.s_header = header};
+    if (send_multicast(&context, &msg)) {
+        printf("could not send_multicast msg.\n");
+    }
 }
 
 int parse_cli_args(int argc, char* argv[])
