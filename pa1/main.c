@@ -57,8 +57,9 @@ int main(int argc, char* argv[])
 
 void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
-    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED};
+    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
     Message msg = {.s_header = header};
+    // TODO add payload
     if (send_multicast(&context, &msg)) {
         printf("could not send_multicast msg.\n");
     }
