@@ -11,5 +11,6 @@ typedef struct {
 
 pipe_t** create_pipes(int N, int pipes_log_fd);
 void close_unused_pipes(pipe_t** pipes, int N, local_id process_id);
+void close_process_pipes(pipe_t** pipes, int N, local_id process_id);
 
 #endif // __DC_PIPES__H

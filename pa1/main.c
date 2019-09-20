@@ -46,6 +46,8 @@ int main(int argc, char* argv[])
         printf("child process %d finished with %d.\n", child_pid, status);
     }
 
+    close_process_pipes(pipes, N, 0);
+
     return 0;
 }
 

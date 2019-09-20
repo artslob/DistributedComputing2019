@@ -30,6 +30,16 @@ void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
     }
 }
 
+void close_process_pipes(pipe_t** pipes, int N, local_id process_id) {
+    for (int i = 0; i < N; i++) {
+        if (i == process_id) {
+            continue;
+        }
+        close(pipes[process_id][i].write_fd);
+        close(pipes[i][process_id].read_fd);
+    }
+}
+
 
 pipe_t** create_pipes(int N, int pipes_log_fd) {
     int rows_count = N, columns_count = N;
