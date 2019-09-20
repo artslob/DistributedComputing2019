@@ -23,7 +23,6 @@ int main(int argc, char* argv[])
     int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 
     pipe_t** pipes = create_pipes(N, pipes_log_fd);
-    pipes = NULL;
     close(pipes_log_fd);
 
     for (local_id child_id = 1; child_id < N; child_id++) {
@@ -38,6 +37,8 @@ int main(int argc, char* argv[])
             printf("I am parent\n");
         }
     }
+
+    close_unused_pipes(pipes, N, 0);
 
     pid_t child_pid = 0;
     int status = 0;

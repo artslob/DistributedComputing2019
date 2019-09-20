@@ -4,6 +4,31 @@
 
 #include "pipes.h"
 #include "log.h"
+#include "ipc.h"
+
+
+void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
+    int rows_count = N, columns_count = N;
+
+    for (int i = 0; i < rows_count - 1; i++) {
+        for (int j = i + 1; j < columns_count; j++) {
+            if (i == process_id) {
+                close(pipes[process_id][j].read_fd);
+                close(pipes[j][process_id].write_fd);
+                continue;
+            }
+            if (j == process_id) {
+                close(pipes[process_id][i].read_fd);
+                close(pipes[i][process_id].write_fd);
+                continue;
+            }
+            close(pipes[i][j].read_fd);
+            close(pipes[i][j].write_fd);
+            close(pipes[j][i].read_fd);
+            close(pipes[j][i].write_fd);
+        }
+    }
+}
 
 
 pipe_t** create_pipes(int N, int pipes_log_fd) {
