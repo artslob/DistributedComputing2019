@@ -33,8 +33,7 @@ pipe_t** create_pipes(int N, int pipes_log_fd) {
         for (int j = i + 1; j < columns_count; j++) {
             // TODO: log pipe creation
             if (pipe(pipefd) != 0) {
-                printf("error occured while creating pipe.\n");
-                exit(1);
+                fatalf("error occured while creating pipe.\n");
             }
             array[i][j].read_fd = pipefd[0];
             array[i][j].write_fd = pipefd[1];
@@ -42,8 +41,7 @@ pipe_t** create_pipes(int N, int pipes_log_fd) {
             log_pipe_created(pipes_log_fd, i, j, pipefd[0], pipefd[1]);
 
             if (pipe(pipefd) != 0) {
-                printf("error occured while creating pipe.\n");
-                exit(1);
+                fatalf("error occured while creating pipe.\n");
             }
             array[j][i].read_fd = pipefd[0];
             array[j][i].write_fd = pipefd[1];
@@ -70,8 +68,7 @@ int main(int argc, char* argv[])
     for (local_id child_id = 1; child_id < N; child_id++) {
         pid_t pid = fork();
         if (pid < 0) {
-            printf("error on fork() call!");
-            exit(1);
+            fatalf("error on fork() call!");
         }
         if (pid == 0) {
             printf("I am child with id %d\n", child_id);
@@ -93,17 +90,15 @@ int main(int argc, char* argv[])
 int parse_cli_args(int argc, char* argv[])
 {
     if (argc < 3) {
-        printf("not enough arguments.\n");
-        exit(0);
+        fatalf("not enough arguments.\n");
     }
     if (strcmp(argv[1], PROCESS_ARG)) {
-        printf("wrong 'process argument' flag.\n");
-        exit(0);
+        fatalf("wrong 'process argument' flag.\n");
     }
     int X = atoi(argv[2]);
     if (1 <= X && X <= 9) {
         return X + 1;
     }
-    printf("process argument is out of range.\n");
-    exit(0);
+    fatalf("process argument is out of range.\n");
+    exit(1);
 }
