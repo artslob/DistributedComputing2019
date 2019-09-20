@@ -13,6 +13,7 @@
 #include "pipes.h"
 
 
+void child_work(ProcessContext context);
 int parse_cli_args(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
@@ -49,6 +50,10 @@ int main(int argc, char* argv[])
     close_process_pipes(pipes, N, 0);
 
     return 0;
+}
+
+void child_work(ProcessContext context) {
+
 }
 
 int parse_cli_args(int argc, char* argv[])
