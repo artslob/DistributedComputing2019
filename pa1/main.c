@@ -15,18 +15,18 @@
 
 
 void wait_children();
-int parse_cli_args(int argc, char* argv[]);
+
+int parse_cli_args(int argc, char *argv[]);
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
     int N = parse_cli_args(argc, argv);
     printf("N is %d\n", N);
 
     int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
     int events_log_fd = open(events_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 
-    pipe_t** pipes = create_pipes(N, pipes_log_fd);
+    pipe_t **pipes = create_pipes(N, pipes_log_fd);
     close(pipes_log_fd);
 
     for (local_id child_id = 1; child_id < N; child_id++) {
@@ -103,8 +103,7 @@ void receive_all_started(ProcessContext context) {
     }
 }
 
-int parse_cli_args(int argc, char* argv[])
-{
+int parse_cli_args(int argc, char *argv[]) {
     if (argc < 3) {
         fatalf("not enough arguments.\n");
     }

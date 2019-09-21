@@ -7,11 +7,11 @@
 #include "ipc.h"
 
 
-pipe_t get_pipe(pipe_t** pipes, local_id from, local_id to) {
+pipe_t get_pipe(pipe_t **pipes, local_id from, local_id to) {
     return pipes[from][to];
 }
 
-void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
+void close_unused_pipes(pipe_t **pipes, int N, local_id process_id) {
     int rows_count = N, columns_count = N;
 
     for (int i = 0; i < rows_count - 1; i++) {
@@ -34,7 +34,7 @@ void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
     }
 }
 
-void close_process_pipes(pipe_t** pipes, int N, local_id process_id) {
+void close_process_pipes(pipe_t **pipes, int N, local_id process_id) {
     for (int i = 0; i < N; i++) {
         if (i == process_id) {
             continue;
@@ -45,13 +45,13 @@ void close_process_pipes(pipe_t** pipes, int N, local_id process_id) {
 }
 
 
-pipe_t** create_pipes(int N, int pipes_log_fd) {
+pipe_t **create_pipes(int N, int pipes_log_fd) {
     int rows_count = N, columns_count = N;
-    int length = sizeof(pipe_t*) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
-    pipe_t** array = (pipe_t**) malloc(length);
+    int length = sizeof(pipe_t *) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
+    pipe_t **array = (pipe_t **) malloc(length);
 
     // this pointer contains address of first element in array
-    pipe_t* first_array_element_address = (pipe_t*) (array + rows_count);
+    pipe_t *first_array_element_address = (pipe_t *) (array + rows_count);
 
     for (int i = 0; i < rows_count; i++) {
         array[i] = first_array_element_address + columns_count * i;
