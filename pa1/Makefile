@@ -9,5 +9,5 @@ run: all
 	./$(executable)
 
 clean:
-	rm $(executable)
-	rm *.log
+	rm -f $(executable)
+	rm -f *.log
