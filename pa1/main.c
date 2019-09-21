@@ -16,6 +16,7 @@
 
 void child_work(ProcessContext context);
 void receive_all_started(ProcessContext context);
+void receive_all_done(ProcessContext context);
 int parse_cli_args(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
@@ -47,6 +48,7 @@ int main(int argc, char* argv[])
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
     close_unused_pipes(pipes, N, PARENT_ID);
     receive_all_started(context);
+    receive_all_done(context);
 
     pid_t child_pid = 0;
     int status = 0;
@@ -55,6 +57,7 @@ int main(int argc, char* argv[])
     }
 
     close_process_pipes(pipes, N, 0);
+    close(events_log_fd);
 
     return 0;
 }
@@ -69,6 +72,30 @@ void child_work(ProcessContext context) {
         printf("could not send_multicast msg.\n");
     }
     receive_all_started(context);
+
+    header = (MessageHeader) {.s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = 0};
+    msg = (Message) {.s_header = header};
+    length = sprintf(msg.s_payload, log_done_fmt, context.id);
+    msg.s_header.s_payload_len = length + 1;
+    if (send_multicast(&context, &msg)) {
+        printf("could not send_multicast msg.\n");
+    }
+    receive_all_done(context);
+}
+
+void receive_all_done(ProcessContext context) {
+    for (local_id from = 1; from < context.N; from++) {
+        if (from == context.id)
+            continue;
+        Message msg;
+        if (receive(&context, from, &msg))
+            printf("got error while receiving msg from %d to %d.\n", from, context.id);
+        if (msg.s_header.s_magic != MESSAGE_MAGIC)
+            printf("got wrong magic in message while starting.\n");
+        if (msg.s_header.s_type != DONE)
+            printf("got wrong type of message while starting.\n");
+        printf("process %d receive msg with length %lu: %s\n", context.id, strlen(msg.s_payload), msg.s_payload);
+    }
 }
 
 void receive_all_started(ProcessContext context) {
