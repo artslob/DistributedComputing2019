@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os
+import smtplib
+import tarfile
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from pathlib import Path
+
+
+def send_email(sender: str, to: str, subject: str, text: str, login: str, password: str, smtp_host: str, files=None):
+    msg = MIMEMultipart()
+    msg['From'] = sender
+    msg['To'] = to
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(text))
+
+    for filename in files or []:
+        with open(filename, 'rb') as file:
+            part = MIMEApplication(file.read(), Name=os.path.basename(filename))
+        msg.attach(part)
+
+    with smtplib.SMTP_SSL(smtp_host) as server:
+        # server.set_debuglevel(1)
+        server.ehlo_or_helo_if_needed()
+        server.login(login, password)
+        server.sendmail(sender, to, msg.as_string())
+
+
+def create_tarfile(source_dir: Path, output_filename):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname=source_dir.name)
+
+
+def main():
+    # TODO add parseargs
+    basedir: Path = Path(__file__).parent.resolve()
+    task_dir = basedir / 'pa1'
+    tar_filename = task_dir / f'{task_dir.name}.tar.gz'
+    create_tarfile(source_dir=task_dir, output_filename=tar_filename)
+
+    sender = os.environ['DC_MAIL_SENDER']
+    send_email(
+        sender=sender,
+        to=os.environ['DC_MAIL_TO'],
+        subject=os.environ['DC_MAIL_SUBJECT'],
+        text=os.environ['DC_MAIL_TEXT'],
+        login=sender,
+        password=os.environ['DC_MAIL_PASS'],
+        smtp_host=os.environ['DC_MAIL_HOST'],
+        files=[tar_filename]
+    )
+
+
+if __name__ == '__main__':
+    main()
