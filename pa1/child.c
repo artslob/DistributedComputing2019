@@ -6,10 +6,31 @@
 #include "log.h"
 
 
+void send_started(ProcessContext context);
+
+void send_done(ProcessContext context);
+
+
 void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
+
+    send_started(context);
     log_started(context.events_log_fd, context.id);
 
+    receive_all_started(context);
+    log_received_all_started(context.events_log_fd, context.id);
+
+    send_done(context);
+    log_done(context.events_log_fd, context.id);
+
+    receive_all_done(context);
+    log_received_all_done(context.events_log_fd, context.id);
+
+    close_process_pipes(context.pipes, context.N, context.id);
+    close(context.events_log_fd);
+}
+
+void send_started(ProcessContext context) {
     MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
     Message msg = {.s_header = header};
     int length = sprintf(msg.s_payload, log_started_fmt, context.id, getpid(), getppid());
@@ -17,21 +38,14 @@ void child_work(ProcessContext context) {
     if (send_multicast(&context, &msg)) {
         printf("could not send_multicast msg.\n");
     }
-    receive_all_started(context);
-    log_received_all_started(context.events_log_fd, context.id);
+}
 
-    log_done(context.events_log_fd, context.id);
-
-    header = (MessageHeader) {.s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = 0};
-    msg = (Message) {.s_header = header};
-    length = sprintf(msg.s_payload, log_done_fmt, context.id);
+void send_done(ProcessContext context) {
+    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = 0};
+    Message msg = {.s_header = header};
+    int length = sprintf(msg.s_payload, log_done_fmt, context.id);
     msg.s_header.s_payload_len = length + 1;
     if (send_multicast(&context, &msg)) {
         printf("could not send_multicast msg.\n");
     }
-    receive_all_done(context);
-    log_received_all_done(context.events_log_fd, context.id);
-
-    close_process_pipes(context.pipes, context.N, context.id);
-    close(context.events_log_fd);
 }
