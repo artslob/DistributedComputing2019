@@ -11,13 +11,11 @@
 #include "common.h"
 #include "log.h"
 #include "pipes.h"
-#include "pa1.h"
+#include "child.h"
 
 
-void child_work(ProcessContext context);
-void receive_all_started(ProcessContext context);
-void receive_all_done(ProcessContext context);
 int parse_cli_args(int argc, char* argv[]);
+
 
 int main(int argc, char* argv[])
 {
@@ -46,6 +44,7 @@ int main(int argc, char* argv[])
     }
 
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
+
     close_unused_pipes(context.pipes, context.N, context.id);
     receive_all_started(context);
     receive_all_done(context);
@@ -60,31 +59,6 @@ int main(int argc, char* argv[])
     close(context.events_log_fd);
 
     return 0;
-}
-
-void child_work(ProcessContext context) {
-    close_unused_pipes(context.pipes, context.N, context.id);
-
-    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
-    Message msg = {.s_header = header};
-    int length = sprintf(msg.s_payload, log_started_fmt, context.id, getpid(), getppid());
-    msg.s_header.s_payload_len = length + 1;
-    if (send_multicast(&context, &msg)) {
-        printf("could not send_multicast msg.\n");
-    }
-    receive_all_started(context);
-
-    header = (MessageHeader) {.s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = 0};
-    msg = (Message) {.s_header = header};
-    length = sprintf(msg.s_payload, log_done_fmt, context.id);
-    msg.s_header.s_payload_len = length + 1;
-    if (send_multicast(&context, &msg)) {
-        printf("could not send_multicast msg.\n");
-    }
-    receive_all_done(context);
-
-    close_process_pipes(context.pipes, context.N, context.id);
-    close(context.events_log_fd);
 }
 
 void receive_all_done(ProcessContext context) {
