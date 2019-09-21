@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     }
 
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
-    close_unused_pipes(pipes, N, PARENT_ID);
+    close_unused_pipes(context.pipes, context.N, context.id);
     receive_all_started(context);
     receive_all_done(context);
 
@@ -56,14 +56,15 @@ int main(int argc, char* argv[])
         printf("child process %d finished with %d.\n", child_pid, status);
     }
 
-    close_process_pipes(pipes, N, 0);
-    close(events_log_fd);
+    close_process_pipes(context.pipes, context.N, context.id);
+    close(context.events_log_fd);
 
     return 0;
 }
 
 void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
+
     MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
     Message msg = {.s_header = header};
     int length = sprintf(msg.s_payload, log_started_fmt, context.id, getpid(), getppid());
@@ -81,6 +82,9 @@ void child_work(ProcessContext context) {
         printf("could not send_multicast msg.\n");
     }
     receive_all_done(context);
+
+    close_process_pipes(context.pipes, context.N, context.id);
+    close(context.events_log_fd);
 }
 
 void receive_all_done(ProcessContext context) {

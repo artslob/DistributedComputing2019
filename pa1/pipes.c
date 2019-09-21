@@ -12,7 +12,6 @@ pipe_t get_pipe(pipe_t** pipes, local_id from, local_id to) {
 }
 
 void close_unused_pipes(pipe_t** pipes, int N, local_id process_id) {
-    // TODO: receive process context
     int rows_count = N, columns_count = N;
 
     for (int i = 0; i < rows_count - 1; i++) {
