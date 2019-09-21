@@ -14,6 +14,7 @@
 #include "child.h"
 
 
+void wait_children();
 int parse_cli_args(int argc, char* argv[]);
 
 
@@ -56,16 +57,20 @@ int main(int argc, char* argv[])
     receive_all_done(context);
     log_received_all_done(context.events_log_fd, context.id);
 
-    pid_t child_pid = 0;
-    int status = 0;
-    while ((child_pid = wait(&status)) > 0) {
-        printf("child process %d finished with %d.\n", child_pid, status);
-    }
+    wait_children();
 
     close_process_pipes(context.pipes, context.N, context.id);
     close(context.events_log_fd);
 
     return 0;
+}
+
+void wait_children() {
+    pid_t child_pid = 0;
+    int status = 0;
+    while ((child_pid = wait(&status)) > 0) {
+        printf("child process %d finished with %d.\n", child_pid, status);
+    }
 }
 
 void receive_all_done(ProcessContext context) {
