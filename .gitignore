@@ -1,3 +1,5 @@
+.idea/
 main
 *.log
 *.tar.gz
+cmake-build-debug/
