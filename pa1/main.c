@@ -46,8 +46,15 @@ int main(int argc, char* argv[])
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
 
     close_unused_pipes(context.pipes, context.N, context.id);
+    log_started(context.events_log_fd, context.id);
+
     receive_all_started(context);
+    log_received_all_started(context.events_log_fd, context.id);
+
+    log_done(context.events_log_fd, context.id);
+
     receive_all_done(context);
+    log_received_all_done(context.events_log_fd, context.id);
 
     pid_t child_pid = 0;
     int status = 0;

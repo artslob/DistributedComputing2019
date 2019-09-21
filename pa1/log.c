@@ -4,6 +4,37 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "ipc.h"
+#include "pa1.h"
+
+
+void log_started(int events_log_fd, local_id process_id) {
+    int BUF_LEN = 75;
+    char buf[BUF_LEN];
+    snprintf(buf, BUF_LEN, log_started_fmt, process_id, getpid(), getppid());
+    write(events_log_fd, buf, strlen(buf));
+}
+
+void log_received_all_started(int events_log_fd, local_id process_id) {
+    int BUF_LEN = 75;
+    char buf[BUF_LEN];
+    snprintf(buf, BUF_LEN, log_received_all_started_fmt, process_id);
+    write(events_log_fd, buf, strlen(buf));
+}
+
+void log_done(int events_log_fd, local_id process_id) {
+    int BUF_LEN = 75;
+    char buf[BUF_LEN];
+    snprintf(buf, BUF_LEN, log_done_fmt, process_id);
+    write(events_log_fd, buf, strlen(buf));
+}
+
+void log_received_all_done(int events_log_fd, local_id process_id) {
+    int BUF_LEN = 75;
+    char buf[BUF_LEN];
+    snprintf(buf, BUF_LEN, log_received_all_done_fmt, process_id);
+    write(events_log_fd, buf, strlen(buf));
+}
 
 void log_pipe_created(int pipes_log_fd, int from, int to, int read_fd, int write_fd) {
     int BUF_LEN = 75;
