@@ -17,11 +17,11 @@
 
 void wait_children();
 
-int parse_cli_args(int argc, char *argv[]);
+local_id parse_cli_args(int argc, char *argv[]);
 
 
 int main(int argc, char *argv[]) {
-    int N = parse_cli_args(argc, argv);
+    local_id N = parse_cli_args(argc, argv);
     printf("N is %d\n", N);
 
     int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
@@ -74,14 +74,14 @@ void wait_children() {
     }
 }
 
-int parse_cli_args(int argc, char *argv[]) {
+local_id parse_cli_args(int argc, char *argv[]) {
     if (argc < 3) {
         fatalf("not enough arguments.\n");
     }
-    if (strcmp(argv[1], PROCESS_ARG)) {
+    if (strcmp(argv[1], PROCESS_ARG) != 0) {
         fatalf("wrong 'process argument' flag.\n");
     }
-    int X = atoi(argv[2]);
+    local_id X = atoi(argv[2]);
     if (1 <= X && X <= 9) {
         return X + 1;
     }

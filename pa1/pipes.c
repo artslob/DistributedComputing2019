@@ -11,11 +11,11 @@ pipe_t get_pipe(pipe_t **pipes, local_id from, local_id to) {
     return pipes[from][to];
 }
 
-void close_unused_pipes(pipe_t **pipes, int N, local_id process_id) {
-    int rows_count = N, columns_count = N;
+void close_unused_pipes(pipe_t **pipes, local_id N, local_id process_id) {
+    local_id rows_count = N, columns_count = N;
 
-    for (int i = 0; i < rows_count - 1; i++) {
-        for (int j = i + 1; j < columns_count; j++) {
+    for (local_id i = 0; i < rows_count - 1; i++) {
+        for (local_id j = i + 1; j < columns_count; j++) {
             if (i == process_id) {
                 close(pipes[process_id][j].read_fd);
                 close(pipes[j][process_id].write_fd);
@@ -34,8 +34,8 @@ void close_unused_pipes(pipe_t **pipes, int N, local_id process_id) {
     }
 }
 
-void close_process_pipes(pipe_t **pipes, int N, local_id process_id) {
-    for (int i = 0; i < N; i++) {
+void close_process_pipes(pipe_t **pipes, local_id N, local_id process_id) {
+    for (local_id i = 0; i < N; i++) {
         if (i == process_id) {
             continue;
         }
@@ -45,8 +45,8 @@ void close_process_pipes(pipe_t **pipes, int N, local_id process_id) {
 }
 
 
-pipe_t **create_pipes(int N, int pipes_log_fd) {
-    int rows_count = N, columns_count = N;
+pipe_t **create_pipes(local_id N, int pipes_log_fd) {
+    local_id rows_count = N, columns_count = N;
     int length = sizeof(pipe_t *) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
     pipe_t **array = (pipe_t **) malloc(length);
 
@@ -59,8 +59,8 @@ pipe_t **create_pipes(int N, int pipes_log_fd) {
 
     int pipefd[2];
 
-    for (int i = 0; i < rows_count - 1; i++) {
-        for (int j = i + 1; j < columns_count; j++) {
+    for (local_id i = 0; i < rows_count - 1; i++) {
+        for (local_id j = i + 1; j < columns_count; j++) {
             if (pipe(pipefd) != 0) {
                 fatalf("error occured while creating pipe.\n");
             }

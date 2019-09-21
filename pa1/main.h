@@ -9,7 +9,7 @@ static const char *const PROCESS_ARG = "-p";
 typedef struct {
     local_id id;
     pipe_t **pipes;
-    int N;
+    local_id N;
     int events_log_fd;
 } ProcessContext;
 
