@@ -46,7 +46,7 @@ def main():
     # TODO add parseargs
     basedir: Path = Path(__file__).parent.resolve()
     task_dir = basedir / 'pa1'
-    tar_filename = task_dir / f'{task_dir.name}.tar.gz'
+    tar_filename = basedir / f'{task_dir.name}.tar.gz'
     create_tarfile(source_dir=task_dir, output_filename=tar_filename)
 
     sender = os.environ['DC_MAIL_SENDER']
