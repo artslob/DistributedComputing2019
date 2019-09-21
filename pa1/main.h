@@ -13,8 +13,4 @@ typedef struct {
     int events_log_fd;
 } ProcessContext;
 
-void receive_all_started(ProcessContext context);
-
-void receive_all_done(ProcessContext context);
-
 #endif // __DC_MAIN__H

@@ -4,6 +4,7 @@
 #include "main.h"
 #include "pa1.h"
 #include "log.h"
+#include "process_common.h"
 
 
 void send_started(ProcessContext context);
