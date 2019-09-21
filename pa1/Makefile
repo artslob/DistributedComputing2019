@@ -11,3 +11,4 @@ run: all
 clean:
 	rm -f $(executable)
 	rm -f *.log
+	rm -rf cmake-build-debug/
