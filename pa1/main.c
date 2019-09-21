@@ -11,6 +11,7 @@
 #include "common.h"
 #include "log.h"
 #include "pipes.h"
+#include "pa1.h"
 
 
 void child_work(ProcessContext context);
@@ -59,7 +60,8 @@ void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
     MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
     Message msg = {.s_header = header};
-    // TODO add payload
+    int length = sprintf(msg.s_payload, log_started_fmt, context.id, getpid(), getppid());
+    msg.s_header.s_payload_len = length + 1;
     if (send_multicast(&context, &msg)) {
         printf("could not send_multicast msg.\n");
     }
