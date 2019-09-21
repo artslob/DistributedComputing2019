@@ -3,10 +3,12 @@
 import os
 import smtplib
 import tarfile
-from email.mime.application import MIMEApplication
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from os.path import basename
 from pathlib import Path
 
 
@@ -21,7 +23,11 @@ def send_email(sender: str, to: str, subject: str, text: str, login: str, passwo
 
     for filename in files or []:
         with open(filename, 'rb') as file:
-            part = MIMEApplication(file.read(), Name=os.path.basename(filename))
+            part = MIMEBase('application', 'x-gzip')
+            part.set_payload(file.read())
+            encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment', filename=f'{basename(filename)}')
+        part.add_header('Content-Type', 'application/x-gzip', filename=f'{basename(filename)}')
         msg.attach(part)
 
     with smtplib.SMTP_SSL(smtp_host) as server:
