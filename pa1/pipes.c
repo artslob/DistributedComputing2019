@@ -45,7 +45,7 @@ void close_process_pipes(pipe_t **pipes, local_id N, local_id process_id) {
 }
 
 
-pipe_t **create_pipes(local_id N, FILE* pipes_log_file) {
+pipe_t **create_pipes(local_id N, FILE *pipes_log_file) {
     local_id rows_count = N, columns_count = N;
     int length = sizeof(pipe_t *) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
     pipe_t **array = (pipe_t **) malloc(length);

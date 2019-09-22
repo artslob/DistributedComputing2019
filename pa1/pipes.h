@@ -11,7 +11,7 @@ typedef struct {
 } pipe_t;
 
 
-pipe_t **create_pipes(local_id N, FILE* pipes_log_file);
+pipe_t **create_pipes(local_id N, FILE *pipes_log_file);
 
 void close_unused_pipes(pipe_t **pipes, local_id N, local_id process_id);
 
