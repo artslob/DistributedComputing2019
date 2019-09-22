@@ -45,7 +45,7 @@ void close_process_pipes(pipe_t **pipes, local_id N, local_id process_id) {
 }
 
 
-pipe_t **create_pipes(local_id N, int pipes_log_fd) {
+pipe_t **create_pipes(local_id N, FILE* pipes_log_file) {
     local_id rows_count = N, columns_count = N;
     int length = sizeof(pipe_t *) * rows_count + sizeof(pipe_t) * rows_count * columns_count;
     pipe_t **array = (pipe_t **) malloc(length);
@@ -67,7 +67,7 @@ pipe_t **create_pipes(local_id N, int pipes_log_fd) {
             array[i][j].read_fd = pipefd[0];
             array[i][j].write_fd = pipefd[1];
             printf("%d %d: %2d %2d\n", i, j, array[i][j].read_fd, array[i][j].write_fd);
-            log_pipe_created(pipes_log_fd, i, j, pipefd[0], pipefd[1]);
+            log_pipe_created(pipes_log_file, i, j, pipefd[0], pipefd[1]);
 
             if (pipe(pipefd) != 0) {
                 fatalf("error occured while creating pipe.\n");
@@ -75,7 +75,7 @@ pipe_t **create_pipes(local_id N, int pipes_log_fd) {
             array[j][i].read_fd = pipefd[0];
             array[j][i].write_fd = pipefd[1];
             printf("%d %d: %2d %2d\n", j, i, array[j][i].read_fd, array[j][i].write_fd);
-            log_pipe_created(pipes_log_fd, j, i, pipefd[0], pipefd[1]);
+            log_pipe_created(pipes_log_file, j, i, pipefd[0], pipefd[1]);
         }
     }
 

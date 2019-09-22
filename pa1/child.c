@@ -28,7 +28,7 @@ void child_work(ProcessContext context) {
     log_received_all_done(context.events_log_fd, context.id);
 
     close_process_pipes(context.pipes, context.N, context.id);
-    close(context.events_log_fd);
+    fclose(context.events_log_fd);
 }
 
 void send_started(ProcessContext context) {

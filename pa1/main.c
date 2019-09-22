@@ -24,11 +24,11 @@ int main(int argc, char *argv[]) {
     local_id N = parse_cli_args(argc, argv);
     printf("N is %d\n", N);
 
-    int pipes_log_fd = open(pipes_log, O_CREAT | O_WRONLY | O_TRUNC | O_APPEND, S_IRUSR | S_IWUSR);
-    int events_log_fd = open(events_log, O_CREAT | O_WRONLY | O_TRUNC | O_APPEND, S_IRUSR | S_IWUSR);
+    FILE *pipes_log_file = fopen(pipes_log, "w+t");
+    FILE *events_log_file = fopen(events_log, "w+t");
 
-    pipe_t **pipes = create_pipes(N, pipes_log_fd);
-    close(pipes_log_fd);
+    pipe_t **pipes = create_pipes(N, pipes_log_file);
+    fclose(pipes_log_file);
 
     for (local_id child_id = 1; child_id < N; child_id++) {
         pid_t pid = fork();
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         }
         if (pid == 0) {
             printf("I am child with id %d\n", child_id);
-            ProcessContext context = {.id = child_id, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
+            ProcessContext context = {.id = child_id, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
             child_work(context);
             exit(0);
         } else {
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_fd};
+    ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
 
     close_unused_pipes(context.pipes, context.N, context.id);
     log_started(context.events_log_fd, context.id);
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     wait_children();
 
     close_process_pipes(context.pipes, context.N, context.id);
-    close(context.events_log_fd);
+    fclose(context.events_log_fd);
 
     return 0;
 }

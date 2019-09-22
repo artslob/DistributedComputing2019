@@ -1,6 +1,8 @@
 #ifndef __DC_PIPES__H
 #define __DC_PIPES__H
 
+#include <stdio.h>
+
 #include "ipc.h"
 
 typedef struct {
@@ -9,7 +11,7 @@ typedef struct {
 } pipe_t;
 
 
-pipe_t **create_pipes(local_id N, int pipes_log_fd);
+pipe_t **create_pipes(local_id N, FILE* pipes_log_file);
 
 void close_unused_pipes(pipe_t **pipes, local_id N, local_id process_id);
 

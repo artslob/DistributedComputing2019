@@ -8,40 +8,25 @@
 #include "pa1.h"
 
 
-void log_started(int events_log_fd, local_id process_id) {
-    int BUF_LEN = 75;
-    char buf[BUF_LEN];
-    snprintf(buf, BUF_LEN, log_started_fmt, process_id, getpid(), getppid());
-    write(events_log_fd, buf, strlen(buf));
+void log_started(FILE *events_log_fd, local_id process_id) {
+    fprintf(events_log_fd, log_started_fmt, process_id, getpid(), getppid());
 }
 
-void log_received_all_started(int events_log_fd, local_id process_id) {
-    int BUF_LEN = 75;
-    char buf[BUF_LEN];
-    snprintf(buf, BUF_LEN, log_received_all_started_fmt, process_id);
-    write(events_log_fd, buf, strlen(buf));
+void log_received_all_started(FILE *events_log_fd, local_id process_id) {
+    fprintf(events_log_fd, log_received_all_started_fmt, process_id);
 }
 
-void log_done(int events_log_fd, local_id process_id) {
-    int BUF_LEN = 75;
-    char buf[BUF_LEN];
-    snprintf(buf, BUF_LEN, log_done_fmt, process_id);
-    write(events_log_fd, buf, strlen(buf));
+void log_done(FILE *events_log_fd, local_id process_id) {
+    fprintf(events_log_fd, log_done_fmt, process_id);
 }
 
-void log_received_all_done(int events_log_fd, local_id process_id) {
-    int BUF_LEN = 75;
-    char buf[BUF_LEN];
-    snprintf(buf, BUF_LEN, log_received_all_done_fmt, process_id);
-    write(events_log_fd, buf, strlen(buf));
+void log_received_all_done(FILE *events_log_fd, local_id process_id) {
+    fprintf(events_log_fd, log_received_all_done_fmt, process_id);
 }
 
-void log_pipe_created(int pipes_log_fd, int from, int to, int read_fd, int write_fd) {
-    int BUF_LEN = 75;
-    char buf[BUF_LEN];
-    snprintf(buf, BUF_LEN, "Created pipe from process %2d to %2d with read_fd %2d and write_fd %2d.\n",
-             from, to, read_fd, write_fd);
-    write(pipes_log_fd, buf, strlen(buf));
+void log_pipe_created(FILE *pipes_log_file, int from, int to, int read_fd, int write_fd) {
+    fprintf(pipes_log_file, "Created pipe from process %2d to %2d with read_fd %2d and write_fd %2d.\n",
+            from, to, read_fd, write_fd);
 }
 
 void fatalf(char const *const fmt, ...) {
