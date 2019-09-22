@@ -1,4 +1,3 @@
-#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,9 +23,11 @@ void log_received_all_done(FILE *events_log_fd, local_id process_id) {
     fprintf(events_log_fd, log_received_all_done_fmt, process_id);
 }
 
-void log_pipe_created(FILE *pipes_log_file, int from, int to, int read_fd, int write_fd) {
-    fprintf(pipes_log_file, "Created pipe from process %2d to %2d with read_fd %2d and write_fd %2d.\n",
-            from, to, read_fd, write_fd);
+static const char *const log_pipe_created_fmt =
+        "Created pipe from process %d to %d with read_fd %2d and write_fd %2d.\n";
+
+void log_pipe_created(FILE *pipes_log_file, local_id from, local_id to, int read_fd, int write_fd) {
+    fprintf(pipes_log_file, log_pipe_created_fmt, from, to, read_fd, write_fd);
 }
 
 void fatalf(char const *const fmt, ...) {
