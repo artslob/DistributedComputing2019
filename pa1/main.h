@@ -6,8 +6,6 @@
 #include "ipc.h"
 #include "pipes.h"
 
-static const char *const PROCESS_ARG = "-p";
-
 typedef struct {
     local_id id;
     local_id N;

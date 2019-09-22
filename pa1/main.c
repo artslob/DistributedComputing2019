@@ -74,6 +74,8 @@ void wait_children() {
     }
 }
 
+static const char *const PROCESS_ARG = "-p";
+
 local_id parse_cli_args(int argc, char *argv[]) {
     if (argc < 3) {
         fatalf("not enough arguments.\n");
