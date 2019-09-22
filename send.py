@@ -40,9 +40,6 @@ def send_email(sender: str, to: str, subject: str, text: str, login: str, passwo
 def create_tarfile(source_dir: Path, output_filename):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=source_dir.name)
-        # also add this script file for future reference
-        script_file = Path(__file__).resolve()
-        tar.add(script_file, arcname=script_file.name)
 
 
 def main():
