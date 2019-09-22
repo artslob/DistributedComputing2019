@@ -3,6 +3,7 @@
 import os
 import smtplib
 import tarfile
+from datetime import datetime
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -60,6 +61,7 @@ def main():
         smtp_host=os.environ['DC_MAIL_HOST'],
         files=[tar_filename]
     )
+    print(f'Sent successfully at {datetime.now().strftime("%d-%m-%Y %H:%M:%S")}.')
 
 
 if __name__ == '__main__':
