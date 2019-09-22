@@ -7,20 +7,20 @@
 #include "pa1.h"
 
 
-void log_started(FILE *events_log_fd, local_id process_id) {
-    fprintf(events_log_fd, log_started_fmt, process_id, getpid(), getppid());
+void log_started(FILE *events_log_file, local_id process_id) {
+    fprintf(events_log_file, log_started_fmt, process_id, getpid(), getppid());
 }
 
-void log_received_all_started(FILE *events_log_fd, local_id process_id) {
-    fprintf(events_log_fd, log_received_all_started_fmt, process_id);
+void log_received_all_started(FILE *events_log_file, local_id process_id) {
+    fprintf(events_log_file, log_received_all_started_fmt, process_id);
 }
 
-void log_done(FILE *events_log_fd, local_id process_id) {
-    fprintf(events_log_fd, log_done_fmt, process_id);
+void log_done(FILE *events_log_file, local_id process_id) {
+    fprintf(events_log_file, log_done_fmt, process_id);
 }
 
-void log_received_all_done(FILE *events_log_fd, local_id process_id) {
-    fprintf(events_log_fd, log_received_all_done_fmt, process_id);
+void log_received_all_done(FILE *events_log_file, local_id process_id) {
+    fprintf(events_log_file, log_received_all_done_fmt, process_id);
 }
 
 static const char *const log_pipe_created_fmt =
