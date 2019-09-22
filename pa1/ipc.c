@@ -29,16 +29,13 @@ int receive(void *self, local_id from, Message *msg) {
     ProcessContext *context = (ProcessContext *) self;
     int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
 
-    MessageHeader header;
-    if (read(read_fd, &header, sizeof(header)) < 0)
+    if (read(read_fd, &msg->s_header, sizeof(msg->s_header)) < 0)
         return 1;
 
-    if (header.s_magic != MESSAGE_MAGIC)
+    if (msg->s_header.s_magic != MESSAGE_MAGIC)
         return 1;
 
-    msg->s_header = header;
-
-    if (read(read_fd, msg->s_payload, header.s_payload_len) < 0)
+    if (read(read_fd, msg->s_payload, msg->s_header.s_payload_len) < 0)
         return 1;
 
     return 0;
