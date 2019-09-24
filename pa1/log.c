@@ -5,6 +5,7 @@
 
 #include "ipc.h"
 #include "pa1.h"
+#include "log.h"
 
 
 void log_started(FILE *events_log_file, local_id process_id) {
@@ -28,6 +29,16 @@ static const char *const log_pipe_created_fmt =
 
 void log_pipe_created(FILE *pipes_log_file, local_id from, local_id to, int read_fd, int write_fd) {
     fprintf(pipes_log_file, log_pipe_created_fmt, from, to, read_fd, write_fd);
+}
+
+void debug_printf(char const *const fmt, ...) {
+    if (!DC_DEBUG_PRINT)
+        return;
+
+    va_list ptr;
+    va_start(ptr, fmt);
+    vprintf(fmt, ptr);
+    va_end(ptr);
 }
 
 void fatalf(char const *const fmt, ...) {
