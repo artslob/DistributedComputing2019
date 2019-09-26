@@ -62,19 +62,19 @@ pipe_t **create_pipes(local_id N, FILE *pipes_log_file) {
     for (local_id i = 0; i < rows_count - 1; i++) {
         for (local_id j = i + 1; j < columns_count; j++) {
             if (pipe(pipefd) != 0) {
-                fatalf("error occured while creating pipe.\n");
+                fatalf("error occurred while creating pipe.\n");
             }
             array[i][j].read_fd = pipefd[0];
             array[i][j].write_fd = pipefd[1];
-            printf("%d %d: %2d %2d\n", i, j, array[i][j].read_fd, array[i][j].write_fd);
+            debug_printf("%d %d: %2d %2d\n", i, j, array[i][j].read_fd, array[i][j].write_fd);
             log_pipe_created(pipes_log_file, i, j, pipefd[0], pipefd[1]);
 
             if (pipe(pipefd) != 0) {
-                fatalf("error occured while creating pipe.\n");
+                fatalf("error occurred while creating pipe.\n");
             }
             array[j][i].read_fd = pipefd[0];
             array[j][i].write_fd = pipefd[1];
-            printf("%d %d: %2d %2d\n", j, i, array[j][i].read_fd, array[j][i].write_fd);
+            debug_printf("%d %d: %2d %2d\n", j, i, array[j][i].read_fd, array[j][i].write_fd);
             log_pipe_created(pipes_log_file, j, i, pipefd[0], pipefd[1]);
         }
     }

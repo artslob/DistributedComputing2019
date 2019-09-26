@@ -20,7 +20,7 @@ local_id parse_cli_args(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
     local_id N = parse_cli_args(argc, argv);
-    printf("N is %d\n", N);
+    debug_printf("N is %d\n", N);
 
     FILE *pipes_log_file = fopen(pipes_log, "w+t");
     FILE *events_log_file = fopen(events_log, "w+t");
@@ -34,12 +34,12 @@ int main(int argc, char *argv[]) {
             fatalf("error on fork() call!");
         }
         if (pid == 0) {
-            printf("I am child with id %d\n", child_id);
+            debug_printf("I am child with id %d\n", child_id);
             ProcessContext context = {.id = child_id, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
             child_work(context);
             exit(0);
         } else {
-            printf("I am parent\n");
+            debug_printf("I am parent\n");
         }
     }
 
@@ -68,7 +68,7 @@ void wait_children() {
     pid_t child_pid = 0;
     int status = 0;
     while ((child_pid = wait(&status)) > 0) {
-        printf("child process %d finished with %d.\n", child_pid, status);
+        debug_printf("child process %d finished with %d.\n", child_pid, status);
     }
 }
 
