@@ -1,5 +1,5 @@
 all:
-	echo "Do nothing..."
+	@echo "Do nothing..."
 
 clean:
 	rm -f *.tar.gz
