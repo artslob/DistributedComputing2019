@@ -36,21 +36,22 @@ int main(int argc, char *argv[]) {
         if (pid < 0) {
             fatalf("error on fork() call!");
         }
-        if (pid == 0) {
-            debug_printf("I am child with id %d\n", child_id);
-            balance_t child_balance = get_child_balance(child_id, argv);
-            ProcessContext context = {
-                    .id = child_id,
-                    .pipes = pipes,
-                    .N = N,
-                    .events_log_fd = events_log_file,
-                    .balance = child_balance,
-            };
-            child_work(context);
-            exit(0);
-        } else {
+        if (pid > 0) {
             debug_printf("I am parent\n");
+            continue;
         }
+        // its child when pid = 0
+        debug_printf("I am child with id %d\n", child_id);
+        balance_t child_balance = get_child_balance(child_id, argv);
+        ProcessContext context = {
+                .id = child_id,
+                .pipes = pipes,
+                .N = N,
+                .events_log_fd = events_log_file,
+                .balance = child_balance,
+        };
+        child_work(context);
+        exit(0);
     }
 
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1};
