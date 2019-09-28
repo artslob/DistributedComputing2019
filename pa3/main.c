@@ -61,9 +61,10 @@ int main(int argc, char *argv[]) {
     receive_all_started(context);
     log_received_all_started(context.events_log_fd, context.id);
 
+    bank_robbery(&context, N - 1);
+
     log_done(context.events_log_fd, context.id);
 
-    //bank_robbery(parent_data);
     //print_history(all);
 
     receive_all_done(context);
