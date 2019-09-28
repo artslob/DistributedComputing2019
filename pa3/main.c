@@ -18,6 +18,8 @@ void wait_children();
 
 local_id parse_cli_args(int argc, char *argv[]);
 
+balance_t get_child_balance(local_id child_id, char *argv[]);
+
 
 int main(int argc, char *argv[]) {
     local_id N = parse_cli_args(argc, argv);
@@ -36,7 +38,14 @@ int main(int argc, char *argv[]) {
         }
         if (pid == 0) {
             debug_printf("I am child with id %d\n", child_id);
-            ProcessContext context = {.id = child_id, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
+            balance_t child_balance = get_child_balance(child_id, argv);
+            ProcessContext context = {
+                    .id = child_id,
+                    .pipes = pipes,
+                    .N = N,
+                    .events_log_fd = events_log_file,
+                    .balance = child_balance,
+            };
             child_work(context);
             exit(0);
         } else {
@@ -44,7 +53,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
+    ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1};
 
     close_unused_pipes(context.pipes, context.N, context.id);
     log_started(context.events_log_fd, context.id);
@@ -77,12 +86,14 @@ void wait_children() {
 }
 
 static const char *const PROCESS_ARG = "-p";
+// Index in argv from which balance numbers are provided.
+static const int BALANCE_ARGC_START = 3;
 
 local_id parse_cli_args(int argc, char *argv[]) {
     // argv[0] = name of program.
     // argv[1] = -p
     // argv[2] = X - number of child processes.
-    int expected_minimal_argc = 3;
+    int expected_minimal_argc = BALANCE_ARGC_START;
     if (argc < expected_minimal_argc) {
         fatalf("not enough arguments.\n");
     }
@@ -102,4 +113,17 @@ local_id parse_cli_args(int argc, char *argv[]) {
         fatalf("balance is not provided for each process. expected %d numbers, got %d.\n", X, got_count_balances);
     }
     return X + 1;
+}
+
+/** Parses cli args and returns balance of child process.
+ * Method assumes that correct number of cli args is provided.
+ * @param child_id: child process id which balance is returned.
+ * @returns: balance number that lies in interval [1; 99].
+ * */
+balance_t get_child_balance(local_id child_id, char *argv[]) {
+    balance_t balance = strtol(argv[BALANCE_ARGC_START + child_id - 1], NULL, 10);
+    if (balance < 1 || 99 < balance) {
+        fatalf("balance for child %d not in interval [1; 99], got number: %d.\n", child_id, balance);
+    }
+    return balance;
 }
