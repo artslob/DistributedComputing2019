@@ -79,16 +79,27 @@ void wait_children() {
 static const char *const PROCESS_ARG = "-p";
 
 local_id parse_cli_args(int argc, char *argv[]) {
-    if (argc < 3) {
+    // argv[0] = name of program.
+    // argv[1] = -p
+    // argv[2] = X - number of child processes.
+    int expected_minimal_argc = 3;
+    if (argc < expected_minimal_argc) {
         fatalf("not enough arguments.\n");
     }
     if (strcmp(argv[1], PROCESS_ARG) != 0) {
         fatalf("wrong 'process argument' flag.\n");
     }
     local_id X = atoi(argv[2]);
-    if (1 <= X && X <= 9) {
-        return X + 1;
+    if (X < 1 || 9 < X) {
+        fatalf("process argument is out of range.\n");
     }
-    fatalf("process argument is out of range.\n");
-    exit(1);
+    // argv[3] = balance of 1 child process.
+    // ...
+    // argv[2 + X] = balance of X child process.
+    int expected_minimal_argc_with_balances = expected_minimal_argc + X;
+    if (argc < expected_minimal_argc_with_balances) {
+        int got_count_balances = argc - expected_minimal_argc;
+        fatalf("balance is not provided for each process. expected %d numbers, got %d.\n", X, got_count_balances);
+    }
+    return X + 1;
 }
