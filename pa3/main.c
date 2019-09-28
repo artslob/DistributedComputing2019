@@ -100,7 +100,7 @@ local_id parse_cli_args(int argc, char *argv[]) {
     if (strcmp(argv[1], PROCESS_ARG) != 0) {
         fatalf("wrong 'process argument' flag.\n");
     }
-    local_id X = atoi(argv[2]);
+    local_id X = strtol(argv[2], NULL, 10);
     if (X < 1 || 9 < X) {
         fatalf("process argument is out of range.\n");
     }
