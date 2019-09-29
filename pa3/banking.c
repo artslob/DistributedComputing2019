@@ -25,7 +25,9 @@ void transfer(void *parent_data, local_id src, local_id dst, balance_t amount) {
     assert(ack_message.s_header.s_payload_len == 0);
 }
 
-// TODO implement
 timestamp_t get_lamport_time() {
+    // function implemented in lamport.c
+    // do not call this func
+    assert(0);
     return 0;
 }
