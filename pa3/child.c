@@ -58,7 +58,7 @@ void handle_transfer_requests(ProcessContext context) {
 
         if (request.s_header.s_type == DONE) {
             done_messages_count++;
-            assert(request.s_header.s_payload_len == 0);
+            assert(request.s_header.s_payload_len == strlen(request.s_payload) + 1);
             assert(done_messages_count <= children_count);
             continue;
         }
