@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <assert.h>
 
 #include "pipes.h"
 #include "log.h"
@@ -80,4 +82,15 @@ pipe_t **create_pipes(local_id N, FILE *pipes_log_file) {
     }
 
     return array;
+}
+
+void make_pipes_asynchronous(pipe_t **pipes, local_id N, local_id process_id) {
+    for (local_id i = 0; i < N; i++) {
+        if (i == process_id) {
+            continue;
+        }
+        int read_fd = get_pipe(pipes, i, process_id).read_fd;
+        int flags = fcntl(read_fd, F_GETFL, 0);
+        assert(fcntl(read_fd, F_SETFL, flags | O_NONBLOCK) == 0);
+    }
 }

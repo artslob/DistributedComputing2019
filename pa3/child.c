@@ -18,6 +18,7 @@ void send_done(ProcessContext context);
 
 void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
+    make_pipes_asynchronous(context.pipes, context.N, context.id);
 
     send_started(context);
     log_started(context.events_log_fd, context.id);

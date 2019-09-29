@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1};
 
     close_unused_pipes(context.pipes, context.N, context.id);
+    make_pipes_asynchronous(context.pipes, context.N, context.id);
 
     log_started(context.events_log_fd, context.id);
     receive_all_started(context);
