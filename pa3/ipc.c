@@ -83,6 +83,9 @@ int receive_any(void *self, Message *msg) {
     ProcessContext *context = (ProcessContext *) self;
     while (1) {
         for (local_id from = 0; from < context->N; from++) {
+            if (from == context->id) {
+                continue;
+            }
             const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
             ReadStatus status = asynchronous_header_read(read_fd, msg);
             if (status == RS_NO_DATA)
