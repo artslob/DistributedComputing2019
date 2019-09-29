@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <assert.h>
 
 #include "main.h"
 #include "ipc.h"
@@ -15,6 +16,8 @@
 
 
 void wait_children();
+
+void send_stop_signal_to_children(ProcessContext context);
 
 local_id parse_cli_args(int argc, char *argv[]);
 
@@ -57,19 +60,20 @@ int main(int argc, char *argv[]) {
     ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1};
 
     close_unused_pipes(context.pipes, context.N, context.id);
-    log_started(context.events_log_fd, context.id);
 
+    log_started(context.events_log_fd, context.id);
     receive_all_started(context);
     log_received_all_started(context.events_log_fd, context.id);
 
     bank_robbery(&context, N - 1);
 
+    send_stop_signal_to_children(context);
+
     log_done(context.events_log_fd, context.id);
-
-    //print_history(all);
-
     receive_all_done(context);
     log_received_all_done(context.events_log_fd, context.id);
+
+    //print_history(all);
 
     wait_children();
 
@@ -84,6 +88,15 @@ void wait_children() {
     int status = 0;
     while ((child_pid = wait(&status)) > 0) {
         debug_printf("child process %d finished with %d.\n", child_pid, status);
+    }
+}
+
+void send_stop_signal_to_children(ProcessContext context) {
+    for (local_id dst = 1; dst < context.N; dst++) {
+        Message msg = {.s_header = {
+                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = get_lamport_time()
+        }};
+        assert(send(&context, dst, &msg) == 0);
     }
 }
 
