@@ -10,6 +10,7 @@
 
 
 pipe_t get_pipe(pipe_t **pipes, local_id from, local_id to) {
+    assert(from != to);
     return pipes[from][to];
 }
 
