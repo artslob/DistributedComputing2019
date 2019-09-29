@@ -97,12 +97,10 @@ void wait_children() {
 
 void send_stop_signal_to_children(ProcessContext context) {
     timestamp_t timestamp = lamport_inc_get_time();
-    for (local_id dst = 1; dst < context.N; dst++) {
-        Message msg = {.s_header = {
-                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = timestamp
-        }};
-        assert(send(&context, dst, &msg) == 0);
-    }
+    Message msg = {.s_header = {
+            .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = timestamp
+    }};
+    assert(send_multicast(&context, &msg) == 0);
 }
 
 static const char *const PROCESS_ARG = "-p";
