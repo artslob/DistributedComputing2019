@@ -7,6 +7,7 @@
 #include "pa1.h"
 #include "log.h"
 #include "process_common.h"
+#include "lamport.h"
 
 
 void handle_transfer_requests(ProcessContext context);
@@ -46,6 +47,7 @@ void handle_transfer_requests(ProcessContext context) {
         Message request;
         assert(receive_any(&context, &request) == 0);
         assert(request.s_header.s_magic == MESSAGE_MAGIC);
+        lamport_receive_time(request.s_header.s_local_time);
 
         if (request.s_header.s_type == STOP) {
             stop_signal_received++;
@@ -72,7 +74,7 @@ void handle_transfer_requests(ProcessContext context) {
         // TODO process balances
 
         if (order.s_src == context.id) {
-            request.s_header.s_local_time = get_lamport_time();
+            request.s_header.s_local_time = lamport_inc_get_time();
             assert(send(&context, order.s_dst, &request) == 0);
             continue;
         }
@@ -80,7 +82,7 @@ void handle_transfer_requests(ProcessContext context) {
         // current process id must be equal to order's src or dst
         assert(order.s_dst == context.id);
         Message ack_for_parent = {.s_header = {
-                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = ACK, .s_local_time = get_lamport_time()
+                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = ACK, .s_local_time = lamport_inc_get_time()
         }};
         assert(send(&context, PARENT_ID, &ack_for_parent) == 0);
     }

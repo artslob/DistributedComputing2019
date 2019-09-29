@@ -4,9 +4,10 @@
 #include "ipc.h"
 #include "main.h"
 
+timestamp_t lamport_get_time();
 
-timestamp_t lamport_inc_get_time(ProcessContext *context);
+timestamp_t lamport_inc_get_time();
 
-timestamp_t lamport_receive_time(ProcessContext *context, timestamp_t received_time);
+timestamp_t lamport_receive_time(timestamp_t received_time);
 
 #endif //__DC__LAMPORT__H

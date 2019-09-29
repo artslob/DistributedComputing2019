@@ -13,6 +13,7 @@
 #include "pipes.h"
 #include "child.h"
 #include "process_common.h"
+#include "lamport.h"
 
 
 void wait_children();
@@ -96,9 +97,10 @@ void wait_children() {
 }
 
 void send_stop_signal_to_children(ProcessContext context) {
+    timestamp_t timestamp = lamport_inc_get_time();
     for (local_id dst = 1; dst < context.N; dst++) {
         Message msg = {.s_header = {
-                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = get_lamport_time()
+                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = timestamp
         }};
         assert(send(&context, dst, &msg) == 0);
     }
