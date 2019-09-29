@@ -82,7 +82,7 @@ void handle_transfer_requests(ProcessContext context) {
         Message ack_for_parent = {.s_header = {
                 .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = ACK, .s_local_time = get_lamport_time()
         }};
-        assert(send(&context, PARENT_ID, &ack_for_parent));
+        assert(send(&context, PARENT_ID, &ack_for_parent) == 0);
     }
 }
 
