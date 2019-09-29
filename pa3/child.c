@@ -33,7 +33,7 @@ void child_work(ProcessContext context) {
 }
 
 void handle_transfer_requests(ProcessContext context) {
-    const int children_count = context.N - 1;
+    const int children_count = context.N - 2; // minus parent and current process
     int stop_signal_received = 0;
     int done_messages_count = 0;
 
