@@ -53,14 +53,13 @@ int main(int argc, char *argv[]) {
                 .N = N,
                 .events_log_fd = events_log_file,
                 .balance = child_balance,
-                .time = 0
         };
         child_work(context);
         exit(0);
     }
 
     ProcessContext context = {
-            .id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1, .time = 0
+            .id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1
     };
 
     close_unused_pipes(context.pipes, context.N, context.id);

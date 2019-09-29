@@ -13,7 +13,6 @@ typedef struct {
     pipe_t **pipes;
     FILE *events_log_fd;
     balance_t balance;
-    timestamp_t time;
 } ProcessContext;
 
 #endif // __DC_MAIN__H
