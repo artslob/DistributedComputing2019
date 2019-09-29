@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 
 #include "ipc.h"
 #include "main.h"
@@ -11,12 +12,9 @@ void receive_all_done(ProcessContext context) {
         if (from == context.id)
             continue;
         Message msg;
-        if (receive(&context, from, &msg))
-            debug_printf("got error while receiving msg from %d to %d.\n", from, context.id);
-        if (msg.s_header.s_magic != MESSAGE_MAGIC)
-            debug_printf("got wrong magic in message while starting.\n");
-        if (msg.s_header.s_type != DONE)
-            debug_printf("got wrong type of message while starting.\n");
+        assert(receive(&context, from, &msg) == 0);
+        assert(msg.s_header.s_magic == MESSAGE_MAGIC);
+        assert(msg.s_header.s_type == DONE);
         lamport_receive_time(msg.s_header.s_local_time);
         debug_printf("process %d receive msg with length %lu: %s", context.id, strlen(msg.s_payload), msg.s_payload);
     }
@@ -27,12 +25,9 @@ void receive_all_started(ProcessContext context) {
         if (from == context.id)
             continue;
         Message msg;
-        if (receive(&context, from, &msg))
-            debug_printf("got error while receiving msg from %d to %d.\n", from, context.id);
-        if (msg.s_header.s_magic != MESSAGE_MAGIC)
-            debug_printf("got wrong magic in message while starting.\n");
-        if (msg.s_header.s_type != STARTED)
-            debug_printf("got wrong type of message while starting.\n");
+        assert(receive(&context, from, &msg) == 0);
+        assert(msg.s_header.s_magic == MESSAGE_MAGIC);
+        assert(msg.s_header.s_type == STARTED);
         lamport_receive_time(msg.s_header.s_local_time);
         debug_printf("process %d receive msg with length %lu: %s", context.id, strlen(msg.s_payload), msg.s_payload);
     }
