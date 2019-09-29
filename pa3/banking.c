@@ -16,14 +16,10 @@ void transfer(void *parent_data, local_id src, local_id dst, balance_t amount) {
     };
     Message transfer_message = {.s_header = header};
     memcpy(transfer_message.s_payload, &order, sizeof(order));
-    if (send(parent_data, src, &transfer_message)) {
-        debug_printf("could not send transfer message to %d process.\n", src);
-    }
+    assert(send(parent_data, src, &transfer_message) == 0);
 
     Message ack_message;
-    if (receive(parent_data, dst, &ack_message)) {
-        debug_printf("could not receive ack message from %d process.\n", dst);
-    }
+    assert(receive(parent_data, dst, &ack_message) == 0);
     assert(ack_message.s_header.s_magic == MESSAGE_MAGIC);
     assert(ack_message.s_header.s_type == ACK);
     assert(ack_message.s_header.s_payload_len == 0);
