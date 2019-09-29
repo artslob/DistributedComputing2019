@@ -44,21 +44,32 @@ int blocking_payload_read(int read_fd, Message *msg) {
     }
 }
 
+int asynchronous_header_read(int read_fd, Message *msg) {
+    const int header_size = sizeof(msg->s_header);
+
+    int count = read(read_fd, &msg->s_header, header_size);
+    if (count < 0 && errno == EAGAIN) {
+        return -1;
+    }
+    if (count <= 0 || count != header_size) {
+        return 1;
+    }
+    return 0;
+}
+
 int receive(void *self, local_id from, Message *msg) {
     ProcessContext *context = (ProcessContext *) self;
     const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
-    const int header_size = sizeof(msg->s_header);
 
     while (1) {
-        const int count = read(read_fd, &msg->s_header, header_size);
-        if (count < 0 && errno == EAGAIN) {
-            // TODO sleep?
+        int async_status = asynchronous_header_read(read_fd, msg);
+        if (async_status == -1)
             continue;
-        }
-        if (count <= 0 || count != header_size) {
+        if (async_status == 0)
+            break;
+        if (async_status == 1)
             return 1;
-        }
-        break;
+        assert(0);
     }
 
     if (msg->s_header.s_magic != MESSAGE_MAGIC)
@@ -72,16 +83,13 @@ int receive_any(void *self, Message *msg) {
     while (1) {
         for (local_id from = 0; from < context->N; from++) {
             const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
-            const int header_size = sizeof(msg->s_header);
-
-            int count = read(read_fd, &msg->s_header, header_size);
-            if (count < 0 && errno == EAGAIN) {
-                // TODO sleep?
+            int async_status = asynchronous_header_read(read_fd, msg);
+            if (async_status == -1)
                 continue;
-            }
-            if (count <= 0 || count != header_size) {
+            if (async_status == 1)
                 return 1;
-            }
+            assert(async_status == 0);
+
             if (msg->s_header.s_magic != MESSAGE_MAGIC) {
                 return 1;
             }
