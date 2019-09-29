@@ -23,4 +23,5 @@ void transfer(void *parent_data, local_id src, local_id dst, balance_t amount) {
     assert(ack_message.s_header.s_magic == MESSAGE_MAGIC);
     assert(ack_message.s_header.s_type == ACK);
     assert(ack_message.s_header.s_payload_len == 0);
+    lamport_receive_time(ack_message.s_header.s_local_time);
 }

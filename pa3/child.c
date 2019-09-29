@@ -89,21 +89,19 @@ void handle_transfer_requests(ProcessContext context) {
 }
 
 void send_started(ProcessContext context) {
-    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = 0};
-    Message msg = {.s_header = header};
+    Message msg = {.s_header = {
+            .s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = lamport_inc_get_time()
+    }};
     int length = sprintf(msg.s_payload, log_started_fmt, context.id, getpid(), getppid());
     msg.s_header.s_payload_len = length + 1;
-    if (send_multicast(&context, &msg)) {
-        debug_printf("could not send_multicast msg.\n");
-    }
+    assert(send_multicast(&context, &msg) == 0);
 }
 
 void send_done(ProcessContext context) {
-    MessageHeader header = {.s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = 0};
-    Message msg = {.s_header = header};
+    Message msg = {.s_header = {
+            .s_magic = MESSAGE_MAGIC, .s_type = DONE, .s_local_time = lamport_inc_get_time()
+    }};
     int length = sprintf(msg.s_payload, log_done_fmt, context.id);
     msg.s_header.s_payload_len = length + 1;
-    if (send_multicast(&context, &msg)) {
-        debug_printf("could not send_multicast msg.\n");
-    }
+    assert(send_multicast(&context, &msg) == 0);
 }
