@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "ipc.h"
 #include "main.h"
@@ -26,6 +27,23 @@ int send_multicast(void *self, const Message *msg) {
     return 0;
 }
 
+int blocking_payload_read(int read_fd, Message *msg) {
+    const int payload_len = msg->s_header.s_payload_len;
+    assert(payload_len >= 0);
+    if (payload_len == 0)
+        return 0;
+
+    while (1) {
+        const int count = read(read_fd, msg->s_payload, payload_len);
+        if (count < 0 && errno == EAGAIN) {
+            continue; // TODO sleep?
+        }
+        if (count <= 0 || count != payload_len)
+            return 1;
+        return 0;
+    }
+}
+
 int receive(void *self, local_id from, Message *msg) {
     ProcessContext *context = (ProcessContext *) self;
     const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
@@ -46,22 +64,7 @@ int receive(void *self, local_id from, Message *msg) {
     if (msg->s_header.s_magic != MESSAGE_MAGIC)
         return 1;
 
-    const int payload_len = msg->s_header.s_payload_len;
-    if (payload_len == 0) {
-        return 0;
-    }
-
-    while (1) {
-        const int count = read(read_fd, msg->s_payload, payload_len);
-        if (count < 0 && errno == EAGAIN) {
-            // TODO sleep?
-            continue;
-        }
-        if (count <= 0 || count != payload_len) {
-            return 1;
-        }
-        return 0;
-    }
+    return blocking_payload_read(read_fd, msg);
 }
 
 int receive_any(void *self, Message *msg) {
@@ -82,21 +85,7 @@ int receive_any(void *self, Message *msg) {
             if (msg->s_header.s_magic != MESSAGE_MAGIC) {
                 return 1;
             }
-            const int payload_len = msg->s_header.s_payload_len;
-            if (payload_len == 0) {
-                return 0;
-            }
-            while (1) {
-                count = read(read_fd, msg->s_payload, payload_len);
-                if (count < 0 && errno == EAGAIN) {
-                    // TODO sleep?
-                    continue;
-                }
-                if (count <= 0 || count != payload_len) {
-                    return 1;
-                }
-                return 0;
-            }
+            return blocking_payload_read(read_fd, msg);
         }
     }
 }
