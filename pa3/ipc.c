@@ -40,3 +40,8 @@ int receive(void *self, local_id from, Message *msg) {
 
     return 0;
 }
+
+int receive_any(void *self, Message *msg) {
+    // TODO implement
+    return 1;
+}
