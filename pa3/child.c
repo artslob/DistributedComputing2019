@@ -8,9 +8,13 @@
 #include "log.h"
 #include "process_common.h"
 #include "lamport.h"
+#include "banking.h"
 
 
 void handle_transfer_requests(ProcessContext context);
+
+void static add_balance_state_to_history(BalanceHistory *balance_history, balance_t s_balance, timestamp_t s_time,
+                                         balance_t s_balance_pending_in);
 
 void send_started(ProcessContext context);
 
@@ -71,21 +75,32 @@ void handle_transfer_requests(ProcessContext context) {
         assert(sizeof(order) == request.s_header.s_payload_len);
         memcpy(&order, request.s_payload, request.s_header.s_payload_len);
 
-        // TODO process balances
+        timestamp_t time = lamport_inc_get_time();
 
         if (order.s_src == context.id) {
-            request.s_header.s_local_time = lamport_inc_get_time();
+            *context.balance -= order.s_amount;
+            add_balance_state_to_history(context.balance_history, *context.balance, time, order.s_amount);
+            request.s_header.s_local_time = time;
             assert(send(&context, order.s_dst, &request) == 0);
             continue;
         }
 
         // current process id must be equal to order's src or dst
         assert(order.s_dst == context.id);
+        *context.balance += order.s_amount;
+        add_balance_state_to_history(context.balance_history, *context.balance, time, 0);
         Message ack_for_parent = {.s_header = {
-                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = ACK, .s_local_time = lamport_inc_get_time()
+                .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = ACK, .s_local_time = time
         }};
         assert(send(&context, PARENT_ID, &ack_for_parent) == 0);
     }
+}
+
+static void add_balance_state_to_history(BalanceHistory *balance_history, balance_t s_balance, timestamp_t s_time,
+                                         balance_t s_balance_pending_in) {
+    balance_history->s_history[balance_history->s_history_len++] = (BalanceState) {
+            .s_balance=s_balance, .s_time = s_time, .s_balance_pending_in=s_balance_pending_in
+    };
 }
 
 void send_started(ProcessContext context) {

@@ -12,7 +12,8 @@ typedef struct {
     local_id N;
     pipe_t **pipes;
     FILE *events_log_fd;
-    balance_t balance;
+    balance_t *balance;
+    BalanceHistory *balance_history;
 } ProcessContext;
 
 #endif // __DC_MAIN__H

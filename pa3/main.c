@@ -14,6 +14,7 @@
 #include "child.h"
 #include "process_common.h"
 #include "lamport.h"
+#include "banking.h"
 
 
 void wait_children();
@@ -52,14 +53,15 @@ int main(int argc, char *argv[]) {
                 .pipes = pipes,
                 .N = N,
                 .events_log_fd = events_log_file,
-                .balance = child_balance,
+                .balance = &child_balance,
+                .balance_history = &(BalanceHistory) {.s_id = child_id, .s_history_len = 0}
         };
         child_work(context);
         exit(0);
     }
 
     ProcessContext context = {
-            .id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = -1
+            .id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file, .balance = &(balance_t) {-1}
     };
 
     close_unused_pipes(context.pipes, context.N, context.id);
