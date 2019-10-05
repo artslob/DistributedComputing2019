@@ -62,6 +62,7 @@ static void handle_requests(ProcessContext context) {
     const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
     int stop_signal_received = 0;
     int done_messages_count = 0;
+    int reply_count = 0;
 
     useful_work(context);
     send_done(context);
@@ -90,6 +91,13 @@ static void handle_requests(ProcessContext context) {
             assert(request.s_header.s_payload_len == strlen(request.s_payload) + 1);
             assert(done_messages_count <= CHILDREN_COUNT);
             continue;
+        }
+
+        if (request.s_header.s_type == CS_REPLY) {
+            reply_count++;
+            assert(request.s_header.s_payload_len == 0);
+            assert(reply_count <= CHILDREN_COUNT);
+            // TODO if reply == children and iterations remains and our request is first, go to cs
         }
     }
 }
