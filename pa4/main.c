@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <assert.h>
 
 #include "ipc.h"
 #include "common.h"
@@ -11,9 +12,12 @@
 #include "pipes.h"
 #include "child.h"
 #include "process_common.h"
+#include "lamport.h"
 
 
 void wait_children();
+
+static void send_stop_signal_to_children(ProcessContext context);
 
 static int get_mutexl_param(int argc, char **argv);
 
@@ -75,6 +79,8 @@ int main(int argc, char *argv[]) {
     receive_all_done(context);
     log_received_all_done(context.events_log_fd, context.id);
 
+    send_stop_signal_to_children(context);
+
     wait_children();
 
     close_process_pipes(context.pipes, context.N, context.id);
@@ -89,6 +95,14 @@ void wait_children() {
     while ((child_pid = wait(&status)) > 0) {
         debug_printf("child process %d finished with %d.\n", child_pid, status);
     }
+}
+
+static void send_stop_signal_to_children(ProcessContext context) {
+    timestamp_t timestamp = lamport_inc_get_time();
+    Message msg = {.s_header = {
+            .s_magic = MESSAGE_MAGIC, .s_payload_len = 0, .s_type = STOP, .s_local_time = timestamp
+    }};
+    assert(send_multicast(&context, &msg) == 0);
 }
 
 static const char *const MUTEXL_ARG = "--mutexl";
