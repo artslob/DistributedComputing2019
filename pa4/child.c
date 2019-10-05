@@ -59,7 +59,7 @@ void add_request_to_queue(RequestQueue *queue, Request request) {
 }
 
 static void handle_requests(ProcessContext context) {
-    const int children_count = context.N - 2; // minus parent and current process
+    const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
     int stop_signal_received = 0;
     int done_messages_count = 0;
 
@@ -68,7 +68,7 @@ static void handle_requests(ProcessContext context) {
     log_done(context.events_log_fd, context.id);
 
     while (1) {
-        if (stop_signal_received && done_messages_count == children_count) {
+        if (stop_signal_received && done_messages_count == CHILDREN_COUNT) {
             log_received_all_done(context.events_log_fd, context.id);
             return;
         }
@@ -88,7 +88,7 @@ static void handle_requests(ProcessContext context) {
         if (request.s_header.s_type == DONE) {
             done_messages_count++;
             assert(request.s_header.s_payload_len == strlen(request.s_payload) + 1);
-            assert(done_messages_count <= children_count);
+            assert(done_messages_count <= CHILDREN_COUNT);
             continue;
         }
     }
