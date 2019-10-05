@@ -74,30 +74,42 @@ static void handle_requests(ProcessContext context) {
             return;
         }
 
-        Message request;
-        assert(receive_any(&context, &request) == 0);
-        assert(request.s_header.s_magic == MESSAGE_MAGIC);
-        lamport_receive_time(request.s_header.s_local_time);
+        Message incoming_message;
+        assert(receive_any(&context, &incoming_message) == 0);
+        assert(incoming_message.s_header.s_magic == MESSAGE_MAGIC);
+        lamport_receive_time(incoming_message.s_header.s_local_time);
 
-        if (request.s_header.s_type == STOP) {
+        if (incoming_message.s_header.s_type == STOP) {
             stop_signal_received++;
-            assert(request.s_header.s_payload_len == 0);
+            assert(incoming_message.s_header.s_payload_len == 0);
             assert(stop_signal_received == 1); // check stop signal received only once
             continue;
         }
 
-        if (request.s_header.s_type == DONE) {
+        if (incoming_message.s_header.s_type == DONE) {
             done_messages_count++;
-            assert(request.s_header.s_payload_len == strlen(request.s_payload) + 1);
+            assert(incoming_message.s_header.s_payload_len == strlen(incoming_message.s_payload) + 1);
             assert(done_messages_count <= CHILDREN_COUNT);
             continue;
         }
 
-        if (request.s_header.s_type == CS_REPLY) {
+        if (incoming_message.s_header.s_type == CS_REPLY) {
             reply_count++;
-            assert(request.s_header.s_payload_len == 0);
+            assert(incoming_message.s_header.s_payload_len == 0);
             assert(reply_count <= CHILDREN_COUNT);
             // TODO if reply == children and iterations remains and our request is first, go to cs
+            continue;
+        }
+
+        if (incoming_message.s_header.s_type == CS_REQUEST) {
+            Request request;
+            memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
+            add_request_to_queue(&context.queue, request);
+            Message reply = {.s_header = {
+                    .s_magic=MESSAGE_MAGIC, .s_local_time=lamport_inc_get_time(), .s_type=CS_REPLY, .s_payload_len=0
+            }};
+            assert(send(&context, request.i, &reply) == 0);
+            continue;
         }
     }
 }
