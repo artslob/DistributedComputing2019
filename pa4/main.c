@@ -4,7 +4,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <assert.h>
 
 #include "main.h"
 #include "ipc.h"
@@ -13,17 +12,25 @@
 #include "pipes.h"
 #include "child.h"
 #include "process_common.h"
-#include "lamport.h"
 
 
 void wait_children();
 
-local_id parse_cli_args(int argc, char *argv[]);
+local_id get_N_param(int argc, char **argv);
 
 
+/**
+ * Order of args can be (but not required be exactly) like this:
+ * argv[0] = name of program (auto provided).
+ * argv[1] = -p
+ * argv[2] = X - number of child processes.
+ * argv[3] = --mutexl - optional flag to enable "critical section".
+ */
 int main(int argc, char *argv[]) {
-    local_id N = parse_cli_args(argc, argv);
+    local_id N = get_N_param(argc, argv);
+    int mutexl = 0; // TODO
     debug_printf("N is %d\n", N);
+    debug_printf("mutexl is %d\n", mutexl);
 
     FILE *pipes_log_file = fopen(pipes_log, "w+t");
     FILE *events_log_file = fopen(events_log, "w+t");
@@ -83,20 +90,31 @@ void wait_children() {
 
 static const char *const PROCESS_ARG = "-p";
 
-local_id parse_cli_args(int argc, char *argv[]) {
-    // argv[0] = name of program.
-    // argv[1] = -p
-    // argv[2] = X - number of child processes.
-    int expected_minimal_argc = 3;
-    if (argc < expected_minimal_argc) {
-        fatalf("not enough arguments.\n");
+/**
+ * Parses required "-p" cli parameter - number of child processes = X.
+ * @returns N: number of all processes = X + 1 (number of children + 1 parent).
+ */
+local_id get_N_param(int argc, char **argv) {
+    const int INVALID_INDEX = -1;
+    int process_flag_index = INVALID_INDEX;
+
+    // start from 1 because 0 param is name of program
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], PROCESS_ARG) == 0) {
+            process_flag_index = i;
+            break;
+        }
     }
-    if (strcmp(argv[1], PROCESS_ARG) != 0) {
-        fatalf("wrong 'process argument' flag.\n");
+    if (process_flag_index == INVALID_INDEX) {
+        fatalf("Error: Please, provide \"%s\" flag to specify X - number of child processes.\n", PROCESS_ARG);
     }
-    local_id X = strtol(argv[2], NULL, 10);
+    const int process_arg_index = process_flag_index + 1;
+    if (argc <= process_arg_index) {
+        fatalf("Error: After \"%s\" flag specify integer X - number of child processes.\n", PROCESS_ARG);
+    }
+    local_id X = strtol(argv[process_arg_index], NULL, 10);
     if (X < 1 || 9 < X) {
-        fatalf("process argument is out of range.\n");
+        fatalf("Error: Process argument X is out of range, should be in [1; 9].\n");
     }
-    return X + 1;  // children number + 1 parent is N
+    return X + 1;
 }
