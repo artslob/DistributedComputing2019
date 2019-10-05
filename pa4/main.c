@@ -16,7 +16,9 @@
 
 void wait_children();
 
-local_id get_N_param(int argc, char **argv);
+static int get_mutexl_param(int argc, char **argv);
+
+static local_id get_N_param(int argc, char **argv);
 
 
 /**
@@ -27,8 +29,8 @@ local_id get_N_param(int argc, char **argv);
  * argv[3] = --mutexl - optional flag to enable "critical section".
  */
 int main(int argc, char *argv[]) {
-    local_id N = get_N_param(argc, argv);
-    int mutexl = 0; // TODO
+    const local_id N = get_N_param(argc, argv);
+    const int mutexl = get_mutexl_param(argc, argv);
     debug_printf("N is %d\n", N);
     debug_printf("mutexl is %d\n", mutexl);
 
@@ -88,13 +90,29 @@ void wait_children() {
     }
 }
 
+static const char *const MUTEXL_ARG = "--mutexl";
+
+/**
+ * Parses optional "--mutexl" cli parameter.
+ * @returns: 1 if provided, else 0.
+ */
+static int get_mutexl_param(int argc, char **argv) {
+    // start from 1 because 0 param is name of program
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], MUTEXL_ARG) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static const char *const PROCESS_ARG = "-p";
 
 /**
  * Parses required "-p" cli parameter - number of child processes = X.
  * @returns N: number of all processes = X + 1 (number of children + 1 parent).
  */
-local_id get_N_param(int argc, char **argv) {
+static local_id get_N_param(int argc, char **argv) {
     const int INVALID_INDEX = -1;
     int process_flag_index = INVALID_INDEX;
 
