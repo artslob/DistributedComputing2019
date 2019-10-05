@@ -58,6 +58,13 @@ void add_request_to_queue(RequestQueue *queue, Request request) {
     queue->array[queue->length - 1] = request;
 }
 
+void remove_first_request_from_queue(RequestQueue *queue) {
+    for (int i = 0; i < queue->length - 1; i++) {
+        queue->array[i] = queue->array[i + 1];
+    }
+    queue->length = queue->length - 1;
+}
+
 static void handle_requests(ProcessContext context) {
     const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
     int stop_signal_received = 0;
@@ -103,6 +110,7 @@ static void handle_requests(ProcessContext context) {
 
         if (incoming_message.s_header.s_type == CS_REQUEST) {
             Request request;
+            assert(incoming_message.s_header.s_payload_len == sizeof(request));
             memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
             add_request_to_queue(&context.queue, request);
             Message reply = {.s_header = {
@@ -110,6 +118,11 @@ static void handle_requests(ProcessContext context) {
             }};
             assert(send(&context, request.i, &reply) == 0);
             continue;
+        }
+
+        if (incoming_message.s_header.s_type == CS_RELEASE) {
+            assert(incoming_message.s_header.s_payload_len == 0);
+            remove_first_request_from_queue(&context.queue);
         }
     }
 }
