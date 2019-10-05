@@ -65,7 +65,7 @@ static void handle_requests(ProcessContext context) {
 
 static void useful_work(ProcessContext context) {
     const int LOOP_COUNT = context.id * 5;
-    for (int i = 0; i < LOOP_COUNT; i++) {
+    for (int i = 1; i <= LOOP_COUNT; i++) {
         log_loop_operation(context.id, i, LOOP_COUNT);
     }
 }
