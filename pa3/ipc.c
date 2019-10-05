@@ -52,7 +52,7 @@ ReadStatus asynchronous_header_read(int read_fd, Message *msg) {
     const int header_size = sizeof(msg->s_header);
     const int count = read(read_fd, &msg->s_header, header_size);
 
-    if (count < 0 && errno == EAGAIN)
+    if ((count < 0 && errno == EAGAIN) || count == 0)
         return RS_NO_DATA;
 
     return (count == header_size) ? RS_SUCCESS : RS_ERROR;
