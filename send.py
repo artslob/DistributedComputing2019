@@ -46,7 +46,7 @@ def create_tarfile(source_dir: Path, output_filename):
 def main():
     # TODO add parseargs
     basedir: Path = Path(__file__).parent.resolve()
-    task_dir = basedir / 'pa1'
+    task_dir = basedir / os.environ['DC_MAIL_PA']
     tar_filename = basedir / f'{task_dir.name}.tar.gz'
     create_tarfile(source_dir=task_dir, output_filename=tar_filename)
 
