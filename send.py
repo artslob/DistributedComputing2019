@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import smtplib
+import sys
 import tarfile
 from datetime import datetime
 from email import encoders
@@ -45,6 +46,7 @@ def create_tarfile(source_dir: Path, output_filename):
 
 def main():
     # TODO add parseargs
+    assert sys.version_info > (3, 6)
     basedir: Path = Path(__file__).parent.resolve()
     task_dir = basedir / os.environ['DC_MAIL_PA']
     tar_filename = basedir / f'{task_dir.name}.tar.gz'
