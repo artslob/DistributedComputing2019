@@ -13,8 +13,6 @@
 
 static void handle_requests(ProcessContext context);
 
-static void useful_work(ProcessContext context);
-
 static void send_started(ProcessContext context);
 
 static void send_done(ProcessContext context);
@@ -67,18 +65,39 @@ void remove_first_request_from_queue(RequestQueue *queue) {
 
 static void handle_requests(ProcessContext context) {
     const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
+    const int MAX_LOOP_COUNT = context.id * 5;
     int stop_signal_received = 0;
     int done_messages_count = 0;
     int reply_count = 0;
-
-    useful_work(context);
-    send_done(context);
-    log_done(context.events_log_fd, context.id);
+    int loop_iteration = 1;
+    int request_sent = 0;
 
     while (1) {
         if (stop_signal_received && done_messages_count == CHILDREN_COUNT) {
             log_received_all_done(context.events_log_fd, context.id);
             return;
+        }
+
+        if (loop_iteration > MAX_LOOP_COUNT) {
+            request_sent = 0;
+            send_done(context);
+            log_done(context.events_log_fd, context.id);
+        }
+
+        if (loop_iteration <= MAX_LOOP_COUNT && request_sent == 0) {
+            debug_printf("request cs\n");
+            request_cs(&context);
+            request_sent = 1;
+            continue;
+        }
+
+        if (request_sent && context.queue.array[0].i == context.id && reply_count == CHILDREN_COUNT) {
+            log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
+            request_sent = 0;
+            debug_printf("release cs\n");
+            release_cs(&context);
+            debug_printf("release cs\n");
+            continue;
         }
 
         Message incoming_message;
@@ -101,7 +120,11 @@ static void handle_requests(ProcessContext context) {
         }
 
         if (incoming_message.s_header.s_type == CS_REPLY) {
-            reply_count++;
+            if (context.queue.length > 0 && context.queue.array[0].i == context.id &&
+                context.queue.array[0].l_time < incoming_message.s_header.s_local_time) {
+                reply_count++;
+                debug_printf("reply count %d\n", reply_count);
+            }
             assert(incoming_message.s_header.s_payload_len == 0);
             assert(reply_count <= CHILDREN_COUNT);
             // TODO if reply == children and iterations remains and our request is first, go to cs
@@ -122,15 +145,10 @@ static void handle_requests(ProcessContext context) {
 
         if (incoming_message.s_header.s_type == CS_RELEASE) {
             assert(incoming_message.s_header.s_payload_len == 0);
+            assert(context.queue.array[0].i != context.id);
             remove_first_request_from_queue(&context.queue);
+            continue;
         }
-    }
-}
-
-static void useful_work(ProcessContext context) {
-    const int LOOP_COUNT = context.id * 5;
-    for (int i = 1; i <= LOOP_COUNT; i++) {
-        log_loop_operation(context.id, i, LOOP_COUNT);
     }
 }
 

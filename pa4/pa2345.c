@@ -35,11 +35,11 @@ int request_cs(const void *self) {
 
 int release_cs(const void *self) {
     ProcessContext *context = (ProcessContext *) self;
-    assert(context != NULL);
     timestamp_t local_time = lamport_inc_get_time();
     Message request = {.s_header = {
             .s_local_time = local_time, .s_type = CS_RELEASE, .s_magic = MESSAGE_MAGIC, .s_payload_len = 0
     }};
+    assert(context->queue.array[0].i == context->id);
     remove_first_request_from_queue(&context->queue);
     assert(send_to_children((void *) self, &request) == 0);
     return 0;
