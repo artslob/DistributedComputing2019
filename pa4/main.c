@@ -56,7 +56,8 @@ int main(int argc, char *argv[]) {
                 .pipes = pipes,
                 .N = N,
                 .events_log_fd = events_log_file,
-                .mutexl = mutexl
+                .mutexl = mutexl,
+                .queue = {.length = 0, .array = {{0}}}
         };
         child_work(context);
         exit(0);

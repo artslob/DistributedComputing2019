@@ -35,6 +35,29 @@ void child_work(ProcessContext context) {
     fclose(context.events_log_fd);
 }
 
+
+void add_request_to_queue(RequestQueue *queue, Request request) {
+    if (queue->length == 0) {
+        queue->array[queue->length++] = request;
+        return;
+    }
+    queue->length++;
+    assert(queue->length <= MAX_PROCESS_ID);
+    for (int i = 0; i < queue->length - 1; i++) {
+        Request compared_request = queue->array[i];
+        int request_have_smaller_time = request.l_time < compared_request.l_time;
+        int time_is_equal_but_smaller_id = request.l_time == compared_request.l_time && request.i < compared_request.i;
+        if (request_have_smaller_time || time_is_equal_but_smaller_id) {
+            for (int j = queue->length - 2; j >= i; j--) {
+                queue->array[j + 1] = queue->array[j];
+            }
+            queue->array[i] = request;
+            return;
+        }
+    }
+    queue->array[queue->length - 1] = request;
+}
+
 static void handle_requests(ProcessContext context) {
     const int children_count = context.N - 2; // minus parent and current process
     int done_messages_count = 0;
