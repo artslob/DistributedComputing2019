@@ -46,7 +46,8 @@ def create_tarfile(source_dir: Path, output_filename):
 
 def main():
     # TODO add parseargs
-    assert sys.version_info > (3, 6)
+    assert sys.version_info >= (3, 6), ("Python version should be >= 3.6. "
+                                        "To check your current python version run: 'python3 -V'.")
     basedir: Path = Path(__file__).parent.resolve()
     task_dir = basedir / os.environ['DC_MAIL_PA']
     tar_filename = basedir / f'{task_dir.name}.tar.gz'
