@@ -5,6 +5,19 @@
 #include "child.h"
 #include "lamport.h"
 
+static int send_to_children(void *self, const Message *msg) {
+    ProcessContext *context = (ProcessContext *) self;
+    for (local_id i = 1; i < context->N; i++) {
+        if (i == context->id) {
+            continue;
+        }
+        if (send(self, i, msg) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 int request_cs(const void *self) {
     ProcessContext *context = (ProcessContext *) self;
@@ -16,7 +29,7 @@ int request_cs(const void *self) {
     }};
     memcpy(request_message.s_payload, &request, s_payload_len);
     add_request_to_queue(&context->queue, request);
-    assert(send_multicast((void *) self, &request_message) == 0);
+    assert(send_to_children((void *) self, &request_message) == 0);
     return 0;
 }
 
@@ -35,6 +48,6 @@ int release_cs(const void *self) {
             .s_local_time = local_time, .s_type = CS_RELEASE, .s_magic = MESSAGE_MAGIC, .s_payload_len = 0
     }};
     remove_own_request_from_queue(&context->queue);
-    assert(send_multicast((void *) self, &request) == 0);
+    assert(send_to_children((void *) self, &request) == 0);
     return 0;
 }
