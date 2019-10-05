@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "ipc.h"
-#include "main.h"
+#include "process_common.h"
 #include "pipes.h"
 
 

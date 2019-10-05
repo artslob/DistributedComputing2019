@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "main.h"
+#include "pipes.h"
 #include "pa1.h"
 #include "log.h"
 #include "process_common.h"

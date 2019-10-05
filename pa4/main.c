@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#include "main.h"
 #include "ipc.h"
 #include "common.h"
 #include "log.h"
