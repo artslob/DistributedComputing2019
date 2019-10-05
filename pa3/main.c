@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 
     pipe_t **pipes = create_pipes(N, pipes_log_file);
     fclose(pipes_log_file);
+    make_pipes_asynchronous(pipes, N);
 
     for (local_id child_id = 1; child_id < N; child_id++) {
         pid_t pid = fork();
@@ -67,7 +68,6 @@ int main(int argc, char *argv[]) {
     };
 
     close_unused_pipes(context.pipes, context.N, context.id);
-    make_pipes_asynchronous(context.pipes, context.N, context.id);
 
     log_started(context.events_log_fd, context.id);
     receive_all_started(context);

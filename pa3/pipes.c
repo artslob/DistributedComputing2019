@@ -85,13 +85,19 @@ pipe_t **create_pipes(local_id N, FILE *pipes_log_file) {
     return array;
 }
 
-void make_pipes_asynchronous(pipe_t **pipes, local_id N, local_id process_id) {
-    for (local_id i = 0; i < N; i++) {
-        if (i == process_id) {
-            continue;
+static void make_fd_asynchronous(int fd) {
+    int current_flags = fcntl(fd, F_GETFL, 0);
+    assert(fcntl(fd, F_SETFL, current_flags | O_NONBLOCK) == 0);
+}
+
+void make_pipes_asynchronous(pipe_t **pipes, local_id N) {
+    local_id rows_count = N, columns_count = N;
+    for (local_id i = 0; i < rows_count - 1; i++) {
+        for (local_id j = i + 1; j < columns_count; j++) {
+            make_fd_asynchronous(get_pipe(pipes, i, j).read_fd);
+            make_fd_asynchronous(get_pipe(pipes, i, j).write_fd);
+            make_fd_asynchronous(get_pipe(pipes, j, i).read_fd);
+            make_fd_asynchronous(get_pipe(pipes, j, i).write_fd);
         }
-        int read_fd = get_pipe(pipes, i, process_id).read_fd;
-        int flags = fcntl(read_fd, F_GETFL, 0);
-        assert(fcntl(read_fd, F_SETFL, flags | O_NONBLOCK) == 0);
     }
 }

@@ -19,6 +19,6 @@ void close_process_pipes(pipe_t **pipes, local_id N, local_id process_id);
 
 pipe_t get_pipe(pipe_t **pipes, local_id from, local_id to);
 
-void make_pipes_asynchronous(pipe_t **pipes, local_id N, local_id process_id);
+void make_pipes_asynchronous(pipe_t **pipes, local_id N);
 
 #endif // __DC_PIPES__H

@@ -26,7 +26,6 @@ void send_done(ProcessContext context);
 
 void child_work(ProcessContext context) {
     close_unused_pipes(context.pipes, context.N, context.id);
-    make_pipes_asynchronous(context.pipes, context.N, context.id);
 
     add_balance_state_to_history(context.balance_history, *context.balance, lamport_get_time(), 0);
 
