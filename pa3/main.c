@@ -17,6 +17,8 @@
 #include "banking.h"
 
 
+void receive_all_histories_and_print(ProcessContext context);
+
 void wait_children();
 
 void send_stop_signal_to_children(ProcessContext context);
@@ -79,7 +81,7 @@ int main(int argc, char *argv[]) {
     receive_all_done(context);
     log_received_all_done(context.events_log_fd, context.id);
 
-    //print_history(all);
+    receive_all_histories_and_print(context);
 
     wait_children();
 
@@ -87,6 +89,19 @@ int main(int argc, char *argv[]) {
     fclose(context.events_log_fd);
 
     return 0;
+}
+
+void receive_all_histories_and_print(ProcessContext context) {
+    AllHistory all_history = {.s_history_len = context.N - 1};
+    for (local_id i = 1; i < context.N; i++) {
+        Message msg;
+        assert(receive(&context, i, &msg) == 0);
+        unsigned long history_length = msg.s_header.s_payload_len / sizeof(*all_history.s_history->s_history);
+        BalanceHistory balance_history = {.s_id = i, .s_history_len = history_length};
+        memcpy(balance_history.s_history, msg.s_payload, msg.s_header.s_payload_len);
+        all_history.s_history[i - 1] = balance_history;
+    }
+    print_history(&all_history);
 }
 
 void wait_children() {

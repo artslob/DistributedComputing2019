@@ -9,9 +9,12 @@
 #include "process_common.h"
 #include "lamport.h"
 #include "banking.h"
+#include "ipc.h"
 
 
 void handle_transfer_requests(ProcessContext context);
+
+void send_balance_history_to_parent(ProcessContext context);
 
 void static add_balance_state_to_history(BalanceHistory *balance_history, balance_t s_balance, timestamp_t s_time,
                                          balance_t s_balance_pending_in);
@@ -32,6 +35,8 @@ void child_work(ProcessContext context) {
     log_received_all_started(context.events_log_fd, context.id);
 
     handle_transfer_requests(context);
+
+    send_balance_history_to_parent(context);
 
     close_process_pipes(context.pipes, context.N, context.id);
     fclose(context.events_log_fd);
@@ -94,6 +99,17 @@ void handle_transfer_requests(ProcessContext context) {
         }};
         assert(send(&context, PARENT_ID, &ack_for_parent) == 0);
     }
+}
+
+void send_balance_history_to_parent(ProcessContext context) {
+    unsigned long message_length =
+            context.balance_history->s_history_len * sizeof(*context.balance_history->s_history);
+    Message msg = {.s_header = {
+            .s_magic = MESSAGE_MAGIC, .s_type = BALANCE_HISTORY, .s_local_time = lamport_inc_get_time(),
+            .s_payload_len = message_length
+    }};
+    memcpy(msg.s_payload, context.balance_history->s_history, message_length);
+    assert(send(&context, PARENT_ID, &msg) == 0);
 }
 
 static void add_balance_state_to_history(BalanceHistory *balance_history, balance_t s_balance, timestamp_t s_time,

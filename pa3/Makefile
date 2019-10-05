@@ -1,5 +1,5 @@
 compiler=clang
-flags=-std=c99 -Wall -pedantic -Werror
+flags=-std=c99 -Wall -pedantic -Werror -L. -lruntime
 executable=main
 
 # Default value for debug print: do not print.
@@ -11,7 +11,12 @@ all:
 	$(compiler) $(flags) -D DC_DEBUG_PRINT='${DC_DEBUG_PRINT}' *.c -o $(executable)
 
 run: all
-	./$(executable)
+	LD_PRELOAD="${PWD}/libruntime.so" ./$(executable) -p 3 10 20 30
+
+help:
+	@echo "# run commands:"
+	@echo 'export LD_LIBRARY_PATH="$${LD_LIBRARY_PATH}:$$(pwd)"'
+	@echo 'make DC_DEBUG_PRINT=0 && LD_PRELOAD="$${PWD}/libruntime.so" ./$(executable) -p 3 10 20 30'
 
 clean:
 	rm -f $(executable)
