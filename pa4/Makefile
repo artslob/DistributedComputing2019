@@ -11,12 +11,12 @@ all:
 	$(compiler) $(flags) -D DC_DEBUG_PRINT='${DC_DEBUG_PRINT}' *.c -o $(executable)
 
 run: all
-	LD_PRELOAD="${PWD}/libruntime.so" ./$(executable) -p 3 10 20 30
+	LD_PRELOAD="${PWD}/libruntime.so" ./$(executable) -p 3
 
 help:
 	@echo "# run commands:"
 	@echo 'export LD_LIBRARY_PATH="$${LD_LIBRARY_PATH}:$$(pwd)"'
-	@echo 'make DC_DEBUG_PRINT=0 && LD_PRELOAD="$${PWD}/libruntime.so" ./$(executable) -p 3 10 20 30'
+	@echo 'make DC_DEBUG_PRINT=0 && LD_PRELOAD="$${PWD}/libruntime.so" ./$(executable) -p 3'
 
 clean:
 	rm -f $(executable)
