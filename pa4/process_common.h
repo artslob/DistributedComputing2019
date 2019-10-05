@@ -11,6 +11,7 @@ typedef struct {
     local_id N;
     pipe_t **pipes;
     FILE *events_log_fd;
+    int mutexl;
 } ProcessContext;
 
 void receive_all_done(ProcessContext context);

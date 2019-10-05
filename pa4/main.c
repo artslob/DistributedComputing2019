@@ -56,12 +56,13 @@ int main(int argc, char *argv[]) {
                 .pipes = pipes,
                 .N = N,
                 .events_log_fd = events_log_file,
+                .mutexl = mutexl
         };
         child_work(context);
         exit(0);
     }
 
-    ProcessContext context = {.id = PARENT_ID, .pipes = pipes, .N = N, .events_log_fd = events_log_file};
+    ProcessContext context = {.id=PARENT_ID, .pipes=pipes, .N=N, .events_log_fd=events_log_file, .mutexl=mutexl};
 
     close_unused_pipes(context.pipes, context.N, context.id);
 
