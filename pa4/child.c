@@ -33,7 +33,6 @@ void child_work(ProcessContext context) {
     fclose(context.events_log_fd);
 }
 
-
 void add_request_to_queue(RequestQueue *queue, Request request) {
     if (queue->length == 0) {
         queue->array[queue->length++] = request;
@@ -106,46 +105,48 @@ static void handle_requests(ProcessContext context) {
         assert(incoming_message.s_header.s_magic == MESSAGE_MAGIC);
         lamport_receive_time(incoming_message.s_header.s_local_time);
 
-        if (incoming_message.s_header.s_type == STOP) {
-            stop_signal_received++;
-            assert(incoming_message.s_header.s_payload_len == 0);
-            assert(stop_signal_received == 1); // check stop signal received only once
-            continue;
-        }
-
-        if (incoming_message.s_header.s_type == DONE) {
-            done_messages_count++;
-            assert(incoming_message.s_header.s_payload_len == strlen(incoming_message.s_payload) + 1);
-            assert(done_messages_count <= CHILDREN_COUNT);
-            continue;
-        }
-
-        if (incoming_message.s_header.s_type == CS_REPLY) {
-            reply_count++;
-            assert(request_sent);
-            assert(context.queue.length > 0);
-            assert(incoming_message.s_header.s_payload_len == 0);
-            assert(reply_count <= CHILDREN_COUNT);
-            continue;
-        }
-
-        if (incoming_message.s_header.s_type == CS_REQUEST) {
-            Request request;
-            assert(incoming_message.s_header.s_payload_len == sizeof(request));
-            memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
-            add_request_to_queue(&context.queue, request);
-            Message reply = {.s_header = {
-                    .s_magic=MESSAGE_MAGIC, .s_local_time=lamport_inc_get_time(), .s_type=CS_REPLY, .s_payload_len=0
-            }};
-            assert(send(&context, request.i, &reply) == 0);
-            continue;
-        }
-
-        if (incoming_message.s_header.s_type == CS_RELEASE) {
-            assert(incoming_message.s_header.s_payload_len == 0);
-            assert(context.queue.array[0].i != context.id);
-            remove_first_request_from_queue(&context.queue);
-            continue;
+        switch (incoming_message.s_header.s_type) {
+            case STOP: {
+                stop_signal_received++;
+                assert(incoming_message.s_header.s_payload_len == 0);
+                assert(stop_signal_received == 1); // check stop signal received only once
+                break;
+            }
+            case DONE: {
+                done_messages_count++;
+                assert(incoming_message.s_header.s_payload_len == strlen(incoming_message.s_payload) + 1);
+                assert(done_messages_count <= CHILDREN_COUNT);
+                break;
+            }
+            case CS_REPLY: {
+                reply_count++;
+                assert(request_sent);
+                assert(context.queue.length > 0);
+                assert(incoming_message.s_header.s_payload_len == 0);
+                assert(reply_count <= CHILDREN_COUNT);
+                break;
+            }
+            case CS_REQUEST: {
+                Request request;
+                assert(incoming_message.s_header.s_payload_len == sizeof(request));
+                memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
+                add_request_to_queue(&context.queue, request);
+                Message reply = {.s_header = {
+                        .s_magic=MESSAGE_MAGIC, .s_local_time=lamport_inc_get_time(), .s_type=CS_REPLY, .s_payload_len=0
+                }};
+                assert(send(&context, request.i, &reply) == 0);
+                break;
+            }
+            case CS_RELEASE: {
+                assert(incoming_message.s_header.s_payload_len == 0);
+                assert(context.queue.array[0].i != context.id);
+                remove_first_request_from_queue(&context.queue);
+                break;
+            }
+            default: {
+                assert(0); // unreachable code
+                break;
+            }
         }
     }
 }
