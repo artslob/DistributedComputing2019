@@ -71,6 +71,7 @@ static void handle_requests(ProcessContext context) {
     int reply_count = 0;
     int loop_iteration = 1;
     int request_sent = 0;
+    int done_sent = 0;
 
     while (1) {
         if (stop_signal_received && done_messages_count == CHILDREN_COUNT) {
@@ -78,14 +79,15 @@ static void handle_requests(ProcessContext context) {
             return;
         }
 
-        if (loop_iteration > MAX_LOOP_COUNT) {
-            request_sent = 0;
+        if (done_sent == 0 && loop_iteration > MAX_LOOP_COUNT) {
             send_done(context);
             log_done(context.events_log_fd, context.id);
+            done_sent = 1;
+            request_sent = 0;
+            continue;
         }
 
         if (loop_iteration <= MAX_LOOP_COUNT && request_sent == 0) {
-            debug_printf("request cs\n");
             request_cs(&context);
             request_sent = 1;
             continue;
@@ -93,10 +95,9 @@ static void handle_requests(ProcessContext context) {
 
         if (request_sent && context.queue.array[0].i == context.id && reply_count == CHILDREN_COUNT) {
             log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
-            request_sent = 0;
-            debug_printf("release cs\n");
             release_cs(&context);
-            debug_printf("release cs\n");
+            request_sent = 0;
+            reply_count = 0;
             continue;
         }
 
@@ -120,14 +121,11 @@ static void handle_requests(ProcessContext context) {
         }
 
         if (incoming_message.s_header.s_type == CS_REPLY) {
-            if (context.queue.length > 0 && context.queue.array[0].i == context.id &&
-                context.queue.array[0].l_time < incoming_message.s_header.s_local_time) {
-                reply_count++;
-                debug_printf("reply count %d\n", reply_count);
-            }
+            reply_count++;
+            assert(request_sent);
+            assert(context.queue.length > 0);
             assert(incoming_message.s_header.s_payload_len == 0);
             assert(reply_count <= CHILDREN_COUNT);
-            // TODO if reply == children and iterations remains and our request is first, go to cs
             continue;
         }
 
