@@ -13,6 +13,8 @@
 
 static void handle_requests(ProcessContext context);
 
+static void handle_requests_without_cs(ProcessContext context);
+
 static void send_started(ProcessContext context);
 
 static void send_done(ProcessContext context);
@@ -27,7 +29,11 @@ void child_work(ProcessContext context) {
     receive_all_started(context);
     log_received_all_started(context.events_log_fd, context.id);
 
-    handle_requests(context);
+    if (context.mutexl) {
+        handle_requests(context);
+    } else {
+        handle_requests_without_cs(context);
+    }
 
     close_process_pipes(context.pipes, context.N, context.id);
     fclose(context.events_log_fd);
@@ -141,6 +147,50 @@ static void handle_requests(ProcessContext context) {
                 assert(incoming_message.s_header.s_payload_len == 0);
                 assert(context.queue.array[0].i != context.id);
                 remove_first_request_from_queue(&context.queue);
+                break;
+            }
+            default: {
+                assert(0); // unreachable code
+                break;
+            }
+        }
+    }
+}
+
+static void handle_requests_without_cs(ProcessContext context) {
+    const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
+    const int MAX_LOOP_COUNT = context.id * 5;
+    int stop_signal_received = 0;
+    int done_messages_count = 0;
+
+    for (int i = 1; i <= MAX_LOOP_COUNT; i++) {
+        log_loop_operation(context.id, i, MAX_LOOP_COUNT);
+    }
+    send_done(context);
+    log_done(context.events_log_fd, context.id);
+
+    while (1) {
+        if (stop_signal_received && done_messages_count == CHILDREN_COUNT) {
+            log_received_all_done(context.events_log_fd, context.id);
+            return;
+        }
+
+        Message incoming_message;
+        assert(receive_any(&context, &incoming_message) == 0);
+        assert(incoming_message.s_header.s_magic == MESSAGE_MAGIC);
+        lamport_receive_time(incoming_message.s_header.s_local_time);
+
+        switch (incoming_message.s_header.s_type) {
+            case DONE: {
+                done_messages_count++;
+                assert(incoming_message.s_header.s_payload_len == strlen(incoming_message.s_payload) + 1);
+                assert(done_messages_count <= CHILDREN_COUNT);
+                break;
+            }
+            case STOP: {
+                stop_signal_received++;
+                assert(incoming_message.s_header.s_payload_len == 0);
+                assert(stop_signal_received == 1); // check stop signal received only once
                 break;
             }
             default: {
