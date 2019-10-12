@@ -49,6 +49,16 @@ typedef struct {
     RequestQueue queue;
     /** Always should be equal to N - 1; Defined here only for convenience. */
     const int fork_length;
+    /**
+     * Always should be equal to N - 1. N - 1 is number of child processes. So process will have fork associated with
+     * itself (its index is ProcessContext.id - 1) but such fork should be ignored.
+     * For example, if N = 4 (param -p = 3):
+     * Parent`s id is 0.
+     * Children`s ids are 1, 2 and 3.
+     * Child with id = 2 will have such `forks` array with length = 3:
+     * [ [0]: fork for 1 process; [1]: ignored; [2]: fork for 3 process; ]
+     * index 1 is ignored because its fork for 2 process in array of 2 process.
+     */
     Fork forks[];
 } ProcessContext;
 
