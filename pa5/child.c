@@ -170,6 +170,20 @@ static void handle_requests_without_cs(ProcessContext context) {
     }
 }
 
+void init_forks_array(Fork *forks, local_id forks_length, local_id child_id) {
+    child_id--; // because indexing in array from 0
+    for (local_id i = 0; i < forks_length; i++) {
+        if (i == child_id)
+            continue;
+        // processes with smaller id have bigger priority (have forks)
+        if (i < child_id) {
+            forks[i] = (Fork) {.ownership = FO_NOT_OWNS, .state = FS_CLEAN, .request = FR_NOT_REQUESTED};
+            continue;
+        }
+        forks[i] = (Fork) {.ownership = FO_OWNS, .state = FS_CLEAN, .request = FR_NOT_REQUESTED};
+    }
+}
+
 static void send_started(ProcessContext context) {
     Message msg = {.s_header = {
             .s_magic = MESSAGE_MAGIC, .s_type = STARTED, .s_local_time = lamport_inc_get_time()
