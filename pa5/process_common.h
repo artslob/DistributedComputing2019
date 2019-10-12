@@ -38,7 +38,7 @@ typedef struct {
     FILE *events_log_fd;
     int mutexl;
     /** Always should be equal to N - 1. */
-    const int fork_length;
+    const local_id forks_length;
     /**
      * Length always should be equal to N - 1. N - 1 is number of child processes. So process will have fork
      * associated with itself (its index is ProcessContext.id - 1) but such fork should be ignored.
