@@ -6,15 +6,6 @@
 #include "ipc.h"
 #include "pipes.h"
 
-typedef struct {
-    timestamp_t l_time;
-    local_id i;
-} Request;
-
-typedef struct {
-    int length;
-    Request array[MAX_PROCESS_ID];
-} RequestQueue;
 
 typedef enum {
     FO_NOT_OWNS = 0,
@@ -46,7 +37,6 @@ typedef struct {
     pipe_t **pipes;
     FILE *events_log_fd;
     int mutexl;
-    RequestQueue queue;
     /** Always should be equal to N - 1; Defined here only for convenience. */
     const int fork_length;
     /**

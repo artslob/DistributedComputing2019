@@ -61,7 +61,6 @@ int main(int argc, char *argv[]) {
                 .N = N,
                 .events_log_fd = events_log_file,
                 .mutexl = mutexl,
-                .queue = {.length = 0, .array = {{0}}}
         };
         child_work(context);
         exit(0);
