@@ -70,10 +70,11 @@ static int can_enter_cs(ProcessContext context) {
         if (i == context.id)
             continue;
         Fork current_fork = context.forks[i];
-        if (current_fork.ownership == FO_NOT_OWNS)
-            return 0;
-        if (!(current_fork.state == FS_CLEAN || current_fork.request == FR_MISSING_TOKEN))
-            return 0;
+        int is_owns_fork = current_fork.ownership == FO_OWNS;
+        int clean_or_no_token = current_fork.state == FS_CLEAN || current_fork.request == FR_MISSING_TOKEN;
+        if (is_owns_fork && clean_or_no_token)
+            continue;
+        return 0;
     }
     return 1;
 }
