@@ -55,17 +55,16 @@ int main(int argc, char *argv[]) {
         }
         // its child when pid = 0
         debug_printf("I am child with id %d\n", child_id);
-        const local_id forks_length = N - 1;
         ProcessContext context = {
                 .id = child_id,
                 .pipes = pipes,
                 .N = N,
                 .events_log_fd = events_log_file,
                 .mutexl = mutexl,
-                .forks_length = forks_length,
+                .forks_length = N,
                 .forks = {{0}}
         };
-        init_forks_array(context.forks, forks_length, child_id);
+        init_forks_array(context.forks, N, child_id);
         child_work(context);
         exit(0);
     }

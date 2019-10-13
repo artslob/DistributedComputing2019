@@ -171,8 +171,7 @@ static void handle_requests_without_cs(ProcessContext context) {
 }
 
 void init_forks_array(Fork *forks, local_id forks_length, local_id child_id) {
-    child_id--; // because indexing in array from 0
-    for (local_id i = 0; i < forks_length; i++) {
+    for (local_id i = 1; i < forks_length; i++) {
         if (i == child_id)
             continue;
         // processes with smaller id have bigger priority (have forks)
