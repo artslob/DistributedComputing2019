@@ -18,8 +18,8 @@ typedef enum {
 } FORK_STATE;
 
 typedef enum {
-    FR_NOT_REQUESTED = 0,
-    FR_REQUESTED = 1,
+    FR_MISSING_TOKEN = 0,
+    FR_TOKEN = 1,
 } FORK_REQUEST;
 
 typedef struct {

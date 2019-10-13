@@ -176,10 +176,10 @@ void init_forks_array(Fork *forks, local_id forks_length, local_id child_id) {
             continue;
         // processes with smaller id have bigger priority (have forks)
         if (i < child_id) {
-            forks[i] = (Fork) {.ownership = FO_NOT_OWNS, .state = FS_CLEAN, .request = FR_NOT_REQUESTED};
+            forks[i] = (Fork) {.ownership = FO_NOT_OWNS, .state = FS_CLEAN, .request = FR_TOKEN};
             continue;
         }
-        forks[i] = (Fork) {.ownership = FO_OWNS, .state = FS_CLEAN, .request = FR_NOT_REQUESTED};
+        forks[i] = (Fork) {.ownership = FO_OWNS, .state = FS_CLEAN, .request = FR_MISSING_TOKEN};
     }
 }
 
