@@ -9,6 +9,7 @@
 #include "lamport.h"
 #include "ipc.h"
 #include "pa2345.h"
+#include "child.h"
 
 
 static void handle_requests(ProcessContext context);
@@ -39,14 +40,55 @@ void child_work(ProcessContext context) {
     fclose(context.events_log_fd);
 }
 
+static int should_send_request(ProcessContext context) {
+    for (local_id i = 1; i < context.forks_length; i++) {
+        if (i == context.id)
+            continue;
+        Fork current_fork = context.forks[i];
+        if (current_fork.ownership == FO_NOT_OWNS && current_fork.request == FR_TOKEN)
+            return 1;
+    }
+    return 0;
+}
+
+static int can_enter_cs(ProcessContext context) {
+    for (local_id i = 1; i < context.forks_length; i++) {
+        if (i == context.id)
+            continue;
+        Fork current_fork = context.forks[i];
+        if (current_fork.ownership == FO_NOT_OWNS)
+            return 0;
+        if (!(current_fork.state == FS_CLEAN || current_fork.request == FR_MISSING_TOKEN))
+            return 0;
+    }
+    return 1;
+}
+
+static int should_release_fork(ProcessContext context) {
+    for (local_id i = 1; i < context.forks_length; i++) {
+        if (i == context.id)
+            continue;
+        Fork current_fork = context.forks[i];
+        if (current_fork.ownership == FO_OWNS && current_fork.state == FS_DIRTY && current_fork.request == FR_TOKEN)
+            return 1;
+    }
+    return 0;
+}
+
+static void mark_forks_as_dirty(ProcessContext context) {
+    for (local_id i = 1; i < context.forks_length; i++) {
+        if (i == context.id)
+            continue;
+        context.forks[i].state = FS_DIRTY;
+    }
+}
+
 static void handle_requests(ProcessContext context) {
     const int CHILDREN_COUNT = context.N - 2; // minus parent and current process
     const int MAX_LOOP_COUNT = context.id * 5;
     int stop_signal_received = 0;
     int done_messages_count = 0;
-    int reply_count = 0;
     int loop_iteration = 1;
-    int request_sent = 0;
     int done_sent = 0;
 
     while (1) {
@@ -59,22 +101,22 @@ static void handle_requests(ProcessContext context) {
             send_done(context);
             log_done(context.events_log_fd, context.id);
             done_sent = 1;
-            request_sent = 0;
             continue;
         }
 
-        if (loop_iteration <= MAX_LOOP_COUNT && request_sent == 0) {
+        if (loop_iteration <= MAX_LOOP_COUNT && should_send_request(context)) {
             request_cs(&context);
-            request_sent = 1;
             continue;
         }
 
-//        if (request_sent && context.queue.array[0].i == context.id && reply_count == CHILDREN_COUNT) {
-        if (request_sent && reply_count == CHILDREN_COUNT) {
-            log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
+        if (should_release_fork(context)) {
             release_cs(&context);
-            request_sent = 0;
-            reply_count = 0;
+            continue;
+        }
+
+        if (loop_iteration <= MAX_LOOP_COUNT && can_enter_cs(context)) {
+            log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
+            mark_forks_as_dirty(context);
             continue;
         }
 
@@ -97,25 +139,22 @@ static void handle_requests(ProcessContext context) {
                 break;
             }
             case CS_REPLY: {
-                reply_count++;
-                assert(request_sent);
-//                assert(context.queue.length > 0);
                 assert(incoming_message.s_header.s_payload_len == 0);
-                assert(reply_count <= CHILDREN_COUNT);
                 break;
             }
             case CS_REQUEST: {
-                assert(incoming_message.s_header.s_payload_len == 0);
-                Message reply = {.s_header = {
-                        .s_magic=MESSAGE_MAGIC, .s_local_time=lamport_inc_get_time(), .s_type=CS_REPLY, .s_payload_len=0
-                }};
-                assert(sizeof(reply) > 0);
-//                assert(send(&context, request.i, &reply) == 0);
+                Request request;
+                assert(incoming_message.s_header.s_payload_len == sizeof(request));
+                memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
+                context.forks[request.from].request = FR_TOKEN;
                 break;
             }
             case CS_RELEASE: {
-                assert(incoming_message.s_header.s_payload_len == 0);
-//                assert(context.queue.array[0].i != context.id);
+                Request request;
+                assert(incoming_message.s_header.s_payload_len == sizeof(request));
+                memcpy(&request, incoming_message.s_payload, incoming_message.s_header.s_payload_len);
+                context.forks[request.from].ownership = FO_OWNS;
+                context.forks[request.from].state = FS_CLEAN;
                 break;
             }
             default: {
