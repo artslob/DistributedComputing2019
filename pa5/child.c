@@ -75,11 +75,11 @@ static int should_release_fork(ProcessContext context) {
     return 0;
 }
 
-static void mark_forks_as_dirty(ProcessContext context) {
-    for (local_id i = 1; i < context.forks_length; i++) {
-        if (i == context.id)
+static void mark_forks_as_dirty(ProcessContext *context) {
+    for (local_id i = 1; i < context->forks_length; i++) {
+        if (i == context->id)
             continue;
-        context.forks[i].state = FS_DIRTY;
+        context->forks[i].state = FS_DIRTY;
     }
 }
 
