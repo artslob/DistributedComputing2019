@@ -20,7 +20,7 @@ int request_cs(const void *self) {
         if (i == context->id)
             continue;
         Fork *current_fork = &context->forks[i];
-        if (current_fork->ownership == FO_NOT_OWNS && current_fork->request == FR_TOKEN) {
+        if (fork_can_be_requested(*current_fork)) {
             current_fork->request = FR_MISSING_TOKEN;
             assert(send(context, i, &request_message) == 0);
         }

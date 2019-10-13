@@ -40,12 +40,21 @@ void child_work(ProcessContext context) {
     fclose(context.events_log_fd);
 }
 
+/** Передача маркера запроса
+ * Процесс отправляет соседнему процессу маркер запроса, если данный процесс:
+ * 1. Владеет маркером;
+ * 2. Не владеет вилкой;
+ * 3. Процесс хочет зайти в critical section.
+ * */
+int fork_can_be_requested(const Fork fork) {
+    return fork.ownership == FO_NOT_OWNS && fork.request == FR_TOKEN;
+}
+
 static int should_send_request(ProcessContext context) {
     for (local_id i = 1; i < context.forks_length; i++) {
         if (i == context.id)
             continue;
-        Fork current_fork = context.forks[i];
-        if (current_fork.ownership == FO_NOT_OWNS && current_fork.request == FR_TOKEN)
+        if (fork_can_be_requested(context.forks[i]))
             return 1;
     }
     return 0;
