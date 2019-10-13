@@ -45,7 +45,7 @@ void child_work(ProcessContext context) {
  * 1. Владеет маркером;
  * 2. Не владеет вилкой;
  * 3. Процесс хочет зайти в critical section.
- * */
+ */
 int fork_can_be_requested(const Fork fork) {
     return fork.ownership == FO_NOT_OWNS && fork.request == FR_TOKEN;
 }
@@ -73,12 +73,22 @@ static int can_enter_cs(ProcessContext context) {
     return 1;
 }
 
+/** Передача вилки
+ * Процесс пересылает вилку, если данный процесс:
+ * 1. Имеет вместе с этой вилкой соответствующий маркер запроса;
+ * 2. Вилка грязная;
+ * 3. Процессу не нужно входить в critical section.
+ * При передаче вилка очищается.
+ */
+int fork_can_be_released(const Fork fork) {
+    return fork.ownership == FO_OWNS && fork.state == FS_DIRTY && fork.request == FR_TOKEN;
+}
+
 static int should_release_fork(ProcessContext context) {
     for (local_id i = 1; i < context.forks_length; i++) {
         if (i == context.id)
             continue;
-        Fork current_fork = context.forks[i];
-        if (current_fork.ownership == FO_OWNS && current_fork.state == FS_DIRTY && current_fork.request == FR_TOKEN)
+        if (fork_can_be_released(context.forks[i]))
             return 1;
     }
     return 0;

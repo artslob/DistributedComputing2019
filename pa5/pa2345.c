@@ -42,8 +42,7 @@ int release_cs(const void *self) {
         if (i == context->id)
             continue;
         Fork *current_fork = &context->forks[i];
-        if (current_fork->ownership == FO_OWNS && current_fork->state == FS_DIRTY
-            && current_fork->request == FR_TOKEN) {
+        if (fork_can_be_released(*current_fork)) {
             current_fork->ownership = FO_NOT_OWNS;
             assert(send(context, i, &release_message) == 0);
         }
