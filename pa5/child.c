@@ -60,6 +60,11 @@ static int should_send_request(ProcessContext context) {
     return 0;
 }
 
+/** Переход из ожидания в critical section (CS)
+ * Ожидающий процесс может войти в CS только тогда, когда он владеет всеми вилками своих соседей
+ * и для любого его соседа верно, что общая вилка чистая либо у неё нет маркера запроса от соседа.
+ * Когда процесс переходит в CS, все его вилки становятся грязными.
+ */
 static int can_enter_cs(ProcessContext context) {
     for (local_id i = 1; i < context.forks_length; i++) {
         if (i == context.id)
