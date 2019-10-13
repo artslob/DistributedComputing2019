@@ -114,14 +114,19 @@ static void handle_requests(ProcessContext context) {
             continue;
         }
 
-        if (loop_iteration <= MAX_LOOP_COUNT && can_enter_cs(context)) {
-            log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
-            mark_forks_as_dirty(context);
+        Message incoming_message;
+        int receive_any_status = receive_any(&context, &incoming_message);
+
+        if (receive_any_status == -1) {
+            // -1 means no messages
+            if (loop_iteration <= MAX_LOOP_COUNT && can_enter_cs(context)) {
+                log_loop_operation(context.id, loop_iteration++, MAX_LOOP_COUNT);
+                mark_forks_as_dirty(&context);
+            }
             continue;
         }
 
-        Message incoming_message;
-        assert(receive_any(&context, &incoming_message) == 0);
+        assert(receive_any_status == 0);
         assert(incoming_message.s_header.s_magic == MESSAGE_MAGIC);
         lamport_receive_time(incoming_message.s_header.s_local_time);
 

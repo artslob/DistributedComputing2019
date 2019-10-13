@@ -81,23 +81,22 @@ int receive(void *self, local_id from, Message *msg) {
 
 int receive_any(void *self, Message *msg) {
     ProcessContext *context = (ProcessContext *) self;
-    while (1) {
-        for (local_id from = 0; from < context->N; from++) {
-            if (from == context->id) {
-                continue;
-            }
-            const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
-            ReadStatus status = asynchronous_header_read(read_fd, msg);
-            if (status == RS_NO_DATA)
-                continue;
-            if (status == RS_ERROR)
-                return RS_ERROR;
-            assert(status == RS_SUCCESS);
-
-            if (msg->s_header.s_magic != MESSAGE_MAGIC)
-                return RS_ERROR;
-
-            return blocking_payload_read(read_fd, msg);
+    for (local_id from = 0; from < context->N; from++) {
+        if (from == context->id) {
+            continue;
         }
+        const int read_fd = get_pipe(context->pipes, from, context->id).read_fd;
+        ReadStatus status = asynchronous_header_read(read_fd, msg);
+        if (status == RS_NO_DATA)
+            continue;
+        if (status == RS_ERROR)
+            return RS_ERROR;
+        assert(status == RS_SUCCESS);
+
+        if (msg->s_header.s_magic != MESSAGE_MAGIC)
+            return RS_ERROR;
+
+        return blocking_payload_read(read_fd, msg);
     }
+    return -1; // when no messages
 }
